@@ -102,34 +102,61 @@ within scope.
 
 ### Q6. Is the LLM grader deterministic?
 
-**No, not by default — and this is the confound the brief flagged.**
+**No — and it is worse than a first reading of the code suggests.**
 
-`grade_outputs.py` builds the open-answer grader as `gpt-4o` with
-`temperature` defaulting to **1.0**. So out of the box, some observed
-inconsistency between replicas is grader noise, not agent noise.
+`grade_outputs.py` builds the open-answer grader as `gpt-4o` with `temperature`
+defaulting to **1.0**. Temperature is a CLI flag (`--temperature`) so it can be
+pinned near 0, which reduces grader noise without eliminating it; LLM inference
+is not guaranteed deterministic even at temperature 0.
 
-Two things make this tractable:
+#### `evaluation_mode` is an entry point, not a grading method
 
-1. **Temperature is a CLI flag** (`--temperature`), so the grader can be pinned
-   near 0. That reduces grader noise but does not eliminate it; LLM inference is
-   not guaranteed deterministic even at temperature 0.
-2. **Most questions are not LLM-graded at all.** `evaluation_mode` is set per
-   question, and across the 205 open-answer questions the split is:
+An earlier version of this document claimed roughly 60% of the benchmark was
+"immune to grader noise by construction", reading the per-question
+`evaluation_mode` field as the grading method. **That was wrong.** Tracing
+`OpenEndedGrader.grade` in `bixbench/graders.py` shows what each mode does in the
+open-answer path:
 
-   | verifier | n | share |
-   |---|---|---|
-   | `llm_verifier` | 83 | 40.5% |
-   | `str_verifier` | 61 | 29.8% |
-   | `range_verifier` | 61 | 29.8% |
+| `evaluation_mode` | n | What actually happens |
+|---|---:|---|
+| `llm_verifier` | 83 | Always calls the LLM |
+| `range_verifier` | 61 | Routes to `_grade_range_llm_verifier` — **also always calls the LLM** |
+| `str_verifier` | 61 | Exact match, then substring match; **falls through to `_grade_llm_verifier` if both fail** |
 
-   `str_verifier` and `range_verifier` are deterministic comparisons. Roughly
-   **60% of the benchmark is immune to grader noise by construction.**
+Two traps here. First, the deterministic `_grade_range_verifier` exists but is
+unreachable from the open-answer path — it is dead code there, reachable only via
+`MCQGrader`. The name suggests a numeric range comparison; the open-answer path
+asks an LLM instead. Second, `str_verifier`'s fallthrough is live because
+`grade_outputs.py` passes `partial_match=True, llm_match=True`.
 
-Planned control, cheap enough to run before any agent run: take the *already
-shipped* baseline answers and re-grade the identical answers K times. Same inputs,
-K grades. Any disagreement is pure grader noise, measured with zero agent cost.
-That gives a grader-noise floor to subtract from — or at minimum to report
-alongside — the agent self-consistency rate.
+Replaying that logic against the shipped baselines gives the real exposure:
+
+| Baseline | Deterministic | LLM-graded |
+|---|---:|---:|
+| gpt-4o answers | 2 / 205 | **203 / 205 (99.0%)** |
+| claude-3-5-sonnet answers | 0 / 205 | **205 / 205 (100%)** |
+
+**Effectively every open-answer grade is an LLM judgment.** There is no
+grader-noise-free subset to fall back on.
+
+#### Consequences
+
+- The grader-noise control is no longer a nicety; it is **load-bearing**. Nothing
+  else bounds how much observed inconsistency is the grader rather than the agent.
+- Capsules cannot be selected to be grader-noise-free. Exposure also is not fixed
+  in advance: whether a `str_verifier` question short-circuits depends on the
+  agent's own answer that replicate, so a capsule's exposure varies run to run.
+- This is itself a finding. A benchmark that presents three verifier modes, two of
+  them named as if deterministic, while routing ~100% of open answers through an
+  LLM judge, is reporting scores with more judgment-noise baked in than the
+  configuration surface suggests.
+
+#### The control
+
+Take the *already shipped* baseline answers and re-grade the identical answers K
+times. Same inputs, K grades — any disagreement is pure grader noise, at zero
+agent cost. That gives a noise floor to report alongside the agent
+self-consistency rate.
 
 ## Friction encountered
 
@@ -302,48 +329,57 @@ the kind of defect this project exists to notice.
 
 ## Capsule selection for the first replicate run
 
-Verifier mode is per question, which allows a sharper design than picking
-capsules on subject alone: choosing capsules that span the grader-exposure
-spectrum lets agent noise be separated from grader noise **within the same run**.
+An earlier draft picked capsules to span the "grader-exposure spectrum", on the
+belief that `str_verifier` capsules were graded deterministically. Q6 above
+shows they are not, so **that rationale is void** — there is no grader-noise-free
+capsule to anchor on, and `bix-13` is not the clean control it was described as.
 
-Proposed starting three (13 questions), per the brief's three-capsule guardrail:
+Selection therefore falls back to ordinary criteria: stay inside the RNA-seq /
+differential-expression cluster, and prefer capsules with enough questions to
+estimate a per-capsule consistency rate.
 
-| Capsule | Q | llm | str | range | Role |
-|---|---:|---:|---:|---:|---|
-| `bix-13` | 5 | 0 | 5 | 0 | Deterministic grading only — pure agent noise, zero grader noise by construction |
-| `bix-43` | 5 | 2 | 3 | 0 | Mixed — the within-capsule contrast |
-| `bix-24` | 3 | 3 | 0 | 0 | LLM-graded only — maximum grader exposure |
+Proposed starting three (16 questions), per the brief's three-capsule guardrail:
 
-All three are in the RNA-seq / differential-expression cluster. `bix-13` is the
-load-bearing one: any inconsistency it shows is agent noise and cannot be
-attributed to the grader.
+| Capsule | Questions | Categories |
+|---|---:|---|
+| `bix-8` | 6 | Differential Expression Analysis, Epigenomics, RNA-seq |
+| `bix-43` | 5 | Differential Expression Analysis, RNA-seq, Transcriptomics |
+| `bix-53` | 5 | Differential Expression Analysis, RNA-seq, Sequence Analysis, Transcriptomics |
+
+These are the three largest capsules in the cluster, which matters because the
+per-capsule varying intercept in the `brms` model is estimated from within-capsule
+questions. Separating agent noise from grader noise now rests entirely on the
+regrade control, not on capsule choice.
 
 ## Q4, partial: measured grader cost
 
 Measured rather than estimated, per the project's own guardrail. The shipped
 baseline CSV holds the exact question/target/predicted triples the grader sees,
-so the real prompts were tokenized with `tiktoken` against gpt-4o's encoding:
+so the real prompts were tokenized with `tiktoken` against gpt-4o's encoding.
 
-- 83 `llm_verifier` questions
-- **156 input tokens per grading call** (median 154, max 300)
+An earlier figure here counted only the 83 `llm_verifier` questions and put K=20
+at ~$0.81. Q6 above corrects that: **203 of 205 questions reach the LLM**, so the
+call volume is 2.4x higher. Corrected numbers, using each mode's actual prompt
+template:
+
+- **203 LLM calls per replicate** (99.0% of questions)
+- **177 input tokens per call** (median 169)
 - ~10 output tokens — the response is just `<grade> correct </grade>`
 
-At gpt-4o list pricing ($2.50 / $10.00 per 1M in/out), the full grader-noise
-control costs:
+| Replicates | Calls per grader | gpt-4o | Claude Sonnet 4.5 | Both |
+|---:|---:|---:|---:|---:|
+| 10 | 2,030 | ~$1.10 | ~$1.38 | ~$2.48 |
+| **20** | **4,060** | ~$2.20 | ~$2.77 | **~$4.97** |
 
-| Replicates | Calls | Cost |
-|---:|---:|---:|
-| 5 | 415 | ~$0.20 |
-| 10 | 830 | ~$0.41 |
-| **20** | **1,660** | **~$0.81** |
+Still cheap enough that replicate count is not the binding constraint, and the
+dual-grader decision still costs only a few dollars. K=20 remains the
+recommendation. Agent-run cost — the expensive half of Q4 — still has to be
+measured on real trajectories.
 
-K=20 is the recommendation: under a dollar, and per-question flip rates need the
-replicates far more than the headline does. Agent-run cost (the expensive half of
-Q4) still has to be measured on real trajectories.
-
-**Blocked on credentials.** No `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is present
-in the environment or in any `.env`. Copy `.env.example` to `.env` and fill it in;
-`.env` is gitignored.
+**Blocked on credentials.** Neither `OPENAI_API_KEY` nor `ANTHROPIC_API_KEY` is
+present in the environment or in any `.env`. They belong in
+`../BixBench-upstream/.env`, since `generate_zeroshot_evals.py` resolves
+`Path(".env")` relative to the working directory.
 
 ## Next steps
 

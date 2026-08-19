@@ -191,10 +191,59 @@ Worth recording because the BixBench README still instructs `huggingface-cli
 login` — a silent no-op in a documented setup step is exactly the kind of
 friction this log exists for.
 
+## The execution image: what the agent can actually reach
+
+`futurehouse/bixbench:aviary-notebook-env` pulled cleanly, **18.3 GB**, but it
+was built **19 months ago** (~Jan 2025). Interpreters are correspondingly dated:
+Python 3.12.2, **R 4.3.3 (2024-02-29)**. 254 Python packages, 333 R packages.
+
+Contents matter more than versions here, because the agent can only analyze with
+what is installed. Checked directly with `find.package()` and
+`importlib.metadata`, not by import success:
+
+| Capability | R | Python |
+|---|---|---|
+| Differential expression | `DESeq2` 1.42.0 — **`edgeR` and `limma` absent** | `pydeseq2` 0.4.12 |
+| Enrichment / pathway | `clusterProfiler` 4.10.0 | `gseapy` 1.1.4 |
+| Single-cell | **`Seurat` absent** | `scanpy` 1.10.4, `anndata` 0.11.1 |
+| Microbiome / ecology | **`phyloseq` absent, `vegan` absent** | **`skbio`, `biom-format`, `qiime2` all absent** |
+| General | `tidyverse` 2.0.0 | `pandas` 2.2.3, `numpy` 2.0.2, `scipy` 1.14.1, `statsmodels` 0.14.4 |
+
+Three consequences for this study:
+
+**The microbiome finding is corroborated independently.** Q5's keyword scan found
+zero microbiome capsules from question text alone. The execution image contains
+no microbiome tooling whatsoever — not `phyloseq`, not `vegan`, not `skbio`, not
+`biom-format`. Two independent lines of evidence now point the same way, so the
+failure taxonomy should be built on the RNA-seq / differential-expression
+cluster. Still worth a final confirmation against capsule metadata, but this is
+no longer a single fragile keyword result.
+
+**Differential expression is effectively DESeq2-only in R.** With 13 capsules
+touching RNA-seq, and `edgeR` and `limma` both missing, the agent's R method
+choice is far more constrained than a working bioinformatician's would be. That
+creates a failure mode the brief's candidate taxonomy does not yet name:
+*reached for a method the environment does not have*. Whether the agent then
+adapts sensibly, silently substitutes something inappropriate, or gives up is
+exactly the kind of distinction manual notebook review can draw.
+
+**Single-cell work is Python-only.** `scanpy` is present and `Seurat` is not, so
+any single-cell capsule forces a language choice regardless of what the expert
+notebook did.
+
+### Open question raised by this
+
+Does the container have network access during a run, letting the agent
+`install.packages()` or `pip install` its way around a gap? If yes, "package
+absent" becomes a *time and token* cost rather than a hard wall, and possibly a
+distinctive failure mode of its own. Not yet determined — resolve during the
+first real run.
+
 ## Next steps
 
 1. `hf auth login` (interactive — needs a token with access to the gated
-   `futurehouse/BixBench` dataset).
+   `futurehouse/BixBench` dataset). Note the CLI rename above: the README's
+   `huggingface-cli login` is a silent no-op.
 2. Run the grader-noise control (Q6) — no agent runs, minimal cost.
 3. Confirm the microbiome-absence finding (Q5) against real capsule metadata.
 4. Run `run_zeroshot.sh` end to end on a small subset.

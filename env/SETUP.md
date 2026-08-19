@@ -157,12 +157,44 @@ alongside — the agent self-consistency rate.
   says 53). Not yet reconciled — possibly an MCQ/open split or a v1 vs v1.5
   difference. Resolve before citing any headline figure.
 
+## Environment build (resolved)
+
+| | |
+|---|---|
+| Installer | `uv` 0.12.5 (via Homebrew — avoids piping a remote install script to a shell) |
+| Interpreter | CPython **3.12.14**, installed by `uv python install 3.12` |
+| Venv | `../BixBench-upstream/.venv`, built with `uv sync --python 3.12` from the shipped `uv.lock` |
+
+Using `uv sync` against the committed lockfile rather than resolving with pip
+means the dependency set is the exact one upstream tested, including the git
+dependency `fhda @ git+https://github.com/Future-House/data-analysis-crow@v1.5.0`.
+
+Import check passed for the packages most likely to break on a newer
+interpreter, plus the harness itself: `pandas` 2.2.3, `numpy` 2.2.3, `aviary`,
+`fhda`, `ldp`, `lmi`, `bixbench`. The 3.14 concern was real but is now moot —
+nothing was fought, the 3.12 environment simply resolved.
+
+Repeat with:
+
+```bash
+cd ../BixBench-upstream && uv sync --python 3.12
+```
+
+### Hugging Face CLI rename
+
+`huggingface-cli` is now a **deprecated no-op**. Running `huggingface-cli login`
+prints a deprecation warning and exits without storing a token, so it looks like
+it worked and does not. The working command is `hf auth login`, checked with
+`hf auth whoami`. Token lands in `~/.cache/huggingface/`.
+
+Worth recording because the BixBench README still instructs `huggingface-cli
+login` — a silent no-op in a documented setup step is exactly the kind of
+friction this log exists for.
+
 ## Next steps
 
-1. Start Docker Desktop; pull `futurehouse/bixbench:aviary-notebook-env`.
-2. `huggingface-cli login` (interactive — needs a token with access to the gated
+1. `hf auth login` (interactive — needs a token with access to the gated
    `futurehouse/BixBench` dataset).
-3. Install `uv`; create a Python 3.12 environment from `uv.lock`.
-4. Run the grader-noise control (Q6) — no agent runs, minimal cost.
-5. Confirm the microbiome-absence finding (Q5) against real capsule metadata.
-6. Only then run `run_zeroshot.sh` end to end on a small subset.
+2. Run the grader-noise control (Q6) — no agent runs, minimal cost.
+3. Confirm the microbiome-absence finding (Q5) against real capsule metadata.
+4. Run `run_zeroshot.sh` end to end on a small subset.

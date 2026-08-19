@@ -1,0 +1,55 @@
+capsule,capsule_uuid,n_questions,n_llm_verifier,n_str_verifier,n_range_verifier,in_rnaseq_cluster,categories,paper
+bix-1,33b801bb-9b47-4a0a-9314-05325c82fde7,2,0,2,0,True,Differential Expression Analysis;Network Biology;RNA-seq;Transcriptomics,https://doi.org/10.1172/jci.insight.167744
+bix-2,30b33e47-92d8-4372-a9f6-da32896493d0,2,0,0,2,False,Genomic Variant Analysis;Genomics,doi.org/10.3324/haematol.2024.285239
+bix-3,94bcdbc9-c729-4661-9bc1-0057bbea39c4,5,1,0,4,True,Differential Expression Analysis;RNA-seq;Transcriptomics,https://zenodo.org/records/4287588
+bix-4,ec9eb551-feee-48f6-8494-fd85e1521881,7,7,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-5,2a8a40d4-05b0-4eec-8bd2-825f61fc9f5d,2,2,0,0,True,Differential Expression Analysis;Network Biology;RNA-seq;Transcriptomics,https://doi.org/10.1172/jci.insight.167744
+bix-6,f4dcda89-678d-403d-b155-1483d0071765,6,2,2,2,False,Functional Genomics,https://www.nature.com/articles/s41467-022-29205-8#Abs1
+bix-7,a02b761a-02b6-46b5-9d5e-2964d5a74960,3,0,1,2,False,Genomic Variant Analysis;Genomics,https://doi.org/10.3324/haematol.2024.285239
+bix-8,48a6b469-9c9d-4bef-b5b4-f29b7d6fa046,6,1,4,1,True,Differential Expression Analysis;Epigenomics;RNA-seq,10.17632/dj4sb8h3c3.1
+bix-9,873bada5-b1f3-423a-87dc-9ddd486c4843,3,2,1,0,True,Differential Expression Analysis;RNA-seq;Transcriptomics,https://zenodo.org/records/4287588
+bix-10,fbe0e950-76f2-4eb7-a216-a2d377970922,7,0,1,6,False,Other,https://zenodo.org/records/12737228
+bix-11,cd811ead-7887-4369-b175-05aff4223765,6,6,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis,Not Available
+bix-12,d38392ec-84b8-485d-ab02-b8788e6f1f43,5,5,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-13,1d54e4a7-8b0f-4224-bd31-efcfded0d46c,5,0,5,0,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,https://doi.org/10.17912/micropub.biology.001326
+bix-14,7718a922-ce2c-4e59-900b-84fe06050ce6,3,0,1,2,False,Genomic Variant Analysis;Genomics,https://doi.org/10.1172/jci.insight.167744
+bix-16,bda54b38-9b49-4009-aad6-d5f52675438a,4,1,2,1,True,Functional Genomics;Transcriptomics,
+bix-17,1cf79c8c-fb8c-453c-8788-c8958ab6f152,1,0,1,0,False,Genomic Variant Analysis;Genomics,https://doi.org/10.3324/haematol.2024.285239
+bix-18,d59734d2-a3e0-462a-a5fd-c8ddc11392b8,5,0,1,4,False,Imaging,https://doi.org/10.17912/micropub.biology.001326
+bix-19,8c64b1fa-fdcc-41e2-be8d-2f0c8d5faaa1,5,1,1,3,False,Imaging;Other,"https://zenodo.org/records/8036465, https://www.science.org/doi/10.1126/sciadv.adf4950"
+bix-20,2ccdbe37-0a92-47b5-9bab-fa8a8c470799,4,0,0,4,False,Genomic Variant Analysis;Genomics,doi.org/10.3324/haematol.2024.285239
+bix-21,e3bde22d-915c-409b-8646-039e0215b171,1,1,0,0,False,Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-22,34a4ea96-c800-4c11-959e-57cdc4932c52,5,0,1,4,True,RNA-seq;Sequence Analysis;Transcriptomics,https://zenodo.org/records/10000430
+bix-24,b1b0ef00-cb15-4375-9aac-e1e53a7250c5,3,3,0,0,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,"https://zenodo.org/records/8353706, https://www.mdpi.com/1422-0067/24/19/14743"
+bix-25,964b67db-88d8-4286-9995-10ccc6ba4c39,2,2,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-26,0923d260-fe1b-4fb4-4398-79edf546e584,3,0,3,0,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,https://doi.org/10.17912/micropub.biology.001326
+bix-27,0f14ffa7-f02a-4d20-8142-dfc404195e56,3,1,0,2,True,Machine Learning and Artificial Intelligence;RNA-seq;Transcriptomics,https://doi.org/10.5061/dryad.ttdz08kxq
+bix-28,c66d3ed9-0a95-46be-a237-ed68498ea7f6,6,6,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-29,b8c485ff-d146-4162-9403-9593c8847cfe,4,3,0,1,False,Other,https://zenodo.org/records/12737228
+bix-30,3d4eb7bb-4fbc-4300-b79a-3eba7a6221bc,4,0,4,0,True,Differential Expression Analysis;Transcriptomics,10.1371/journal.pone.0150501
+bix-31,b1dbace7-f6e9-42ec-81e1-bcc24161cc27,4,0,3,1,True,Differential Expression Analysis;RNA-seq;Transcriptomics,https://zenodo.org/records/10000430
+bix-32,a94b7008-bb9a-4a46-ebfb-4afdfdd299d5,3,2,1,0,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,https://doi.org/10.17912/micropub.biology.001326
+bix-33,a5fba1a0-ad42-41da-a299-201655a5ffe8,2,0,2,0,True,Differential Expression Analysis;Single-Cell Analysis,https://doi.org/10.5281/zenodo.13935259
+bix-34,17baa727-5eb7-4544-a466-3148a48b3cde,6,6,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-35,4cb6f8ce-4d81-40b2-8d9c-85868796ee73,4,4,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-36,48181cce-3928-4491-94b4-c23504a6aaa1,4,0,1,3,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,https://zenodo.org/records/10000430
+bix-37,40cbef03-b5c3-4448-b00f-0ba2965dea9b,4,1,3,0,True,Differential Expression Analysis;Proteomics;RNA-seq,10.17632/dj4sb8h3c3.1
+bix-38,975f3e91-53b0-44b1-ac9f-20023d9c8cd0,5,5,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-39,28a5984e-9061-4d6f-99a1-40f8753bc9f4,1,0,1,0,False,Genomic Variant Analysis;Genomics,https://doi.org/10.3324/haematol.2024.285239
+bix-41,8b462015-86ab-434f-29e1-04dda1588031,4,0,3,1,False,Imaging,https://doi.org/10.17912/micropub.biology.001326
+bix-42,27821d45-94e6-4f4e-a914-e66ffaefdd3f,2,1,1,0,True,Genomics;Integrative Omics;Machine Learning and Artificial Intelligence;Other;Transcriptomics,https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0305268
+bix-43,15ff11e5-2db1-45b6-b3a3-46bc2a74b821,5,2,3,0,True,Differential Expression Analysis;RNA-seq;Transcriptomics,"https://zenodo.org/records/8353706, https://www.mdpi.com/1422-0067/24/19/14743"
+bix-45,ebc7c8a6-ba34-46db-bf8c-b3e310434ba9,4,4,0,0,False,Genomics;Phylogenetics;Whole Genome Sequencing (WGS),Not Available
+bix-46,d37acffb-d802-4ce0-8caa-66f50667367a,2,0,2,0,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,https://doi.org/10.17912/micropub.biology.001326
+bix-47,4a336d0c-3d6b-440a-bfb0-437b26a00af3,2,0,2,0,False,Genomic Variant Analysis;Genomics,https://doi.org/10.3324/haematol.2024.285239
+bix-49,4ef3fcd8-1c35-466f-9d93-49b92f4ea760,5,0,5,0,True,Differential Expression Analysis;RNA-seq;Transcriptomics,https://doi.org/10.1172/jci.insight.167744
+bix-51,93f63fb8-b56c-4ad1-8d3b-d651e2107423,7,0,0,7,False,Other,
+bix-52,4dceea58-7d66-4576-bfc6-88c026d5b7a9,6,1,1,4,False,Epigenomics,https://doi.org/10.5061/dryad.wm37pvmw8
+bix-53,308d53bf-1513-4a09-913b-3a1112f94e7b,5,2,3,0,True,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics,"https://zenodo.org/records/14063261, https://www.jbc.org/article/S0021-9258(24)02587-0/fulltext"
+bix-54,9e52daf6-ca58-43e8-e732-fbac3459d295,7,0,0,7,False,Imaging,https://doi.org/10.17912/micropub.biology.001326
+bix-55,451a5322-db12-4026-8d8d-24647a85c4b1,1,1,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-56,302f0f4f-a9d7-460d-9488-d7cc7832bdf9,1,1,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS),Not Available
+bix-57,ff43cd5b-6f9e-410b-8d53-a5bb11b5b531,1,1,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis,Not Available
+bix-58,cdb0c58b-c9e1-47a7-9ad1-6abc48335c3f,1,1,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis,Not Available
+bix-60,1aea473d-db97-4c12-9a1e-6c850ddc9110,1,1,0,0,False,Genomics;Phylogenetics and Evolutionary Analysis,Not Available
+bix-61,2e6ab559-e6ef-5d65-8949-f9c23c8bc561,6,6,0,0,False,Antimicrobial Resistance;Genomics;SNP Analysis;Whole Genome Sequencing (WGS),Not Available

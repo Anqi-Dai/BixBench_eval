@@ -239,11 +239,88 @@ absent" becomes a *time and token* cost rather than a hard wall, and possibly a
 distinctive failure mode of its own. Not yet determined — resolve during the
 first real run.
 
+## Hugging Face access — and a correction
+
+`hf auth login` succeeded (user `anqidai`). Two corrections to the brief follow
+from actually querying the hub:
+
+**The dataset is not gated.** `dataset_info('futurehouse/BixBench').gated` is
+`False`. The brief and the upstream README both say authentication is required;
+it is not. A token is still worth having for rate limits, but the login is not a
+blocker for anyone reproducing this.
+
+**The dataset has 64 capsule zips, not 53.** The paper reports 53 capsules and
+296 questions. The hub repo holds 64 `CapsuleFolder-*.zip` files, while
+`BixBench.jsonl` (v1.5) describes **205 questions across 54 capsules**. Three
+different counts. The metadata `version` field says `1.5`, so the paper's figures
+are presumably v1. Nothing here should cite a headline number without saying
+which version it came from.
+
+## Q5, settled: capsules can be filtered from metadata, and there is no microbiome
+
+`BixBench.jsonl` carries a curator-assigned `categories` field per question, so
+subject matter is read directly rather than inferred. Full category list across
+all 54 capsules:
+
+| n | Category | | n | Category |
+|---:|---|---|---:|---|
+| 23 | Genomics | | 2 | Network Biology |
+| 19 | Transcriptomics | | 2 | Functional Genomics |
+| 18 | RNA-seq | | 2 | Machine Learning and AI |
+| 18 | Differential Expression Analysis | | 2 | Epigenomics |
+| 14 | Phylogenetics and Evolutionary Analysis | | 1 | Single-Cell Analysis |
+| 12 | Whole Genome Sequencing (WGS) | | 1 | Proteomics |
+| 8 | Sequence Analysis | | 1 | Integrative Omics |
+| 7 | Genomic Variant Analysis | | 1 | Phylogenetics |
+| 5 | Other | | 1 | SNP Analysis |
+| 4 | Imaging | | 1 | Antimicrobial Resistance |
+
+**There is no microbiome or metagenomics category.** The nearest match is a
+single "Antimicrobial Resistance" capsule, which is bacterial genomics rather
+than community profiling.
+
+That conclusion now rests on three independent lines of evidence:
+
+1. Keyword scan over question text — zero hits.
+2. Execution image carries no microbiome tooling — no `phyloseq`, `vegan`,
+   `skbio`, `biom-format` or `qiime2`.
+3. Curator-assigned metadata categories — no such category exists.
+
+**Decision: the failure taxonomy targets the RNA-seq / differential-expression
+cluster** — 22 capsules, 81 questions, the largest coherent domain in the
+benchmark and squarely within scope.
+
+### Another silent-corruption wart
+
+`categories` is stored two different ways: most records use a plain
+comma-separated string, but 57 of 205 hold the *repr of a Python list*
+(`"['Genomics', 'Phylogenetics']"`). Splitting on commas alone shreds the second
+form into fragments like `"['Genomics'"` and yields a category table that looks
+plausible and is wrong. Handled in `py/scan_capsules.py`; logged because it is
+the second such wart found (after the `bix-`/`Bix-` capitalization) and both are
+the kind of defect this project exists to notice.
+
+## Capsule selection for the first replicate run
+
+Verifier mode is per question, which allows a sharper design than picking
+capsules on subject alone: choosing capsules that span the grader-exposure
+spectrum lets agent noise be separated from grader noise **within the same run**.
+
+Proposed starting three (13 questions), per the brief's three-capsule guardrail:
+
+| Capsule | Q | llm | str | range | Role |
+|---|---:|---:|---:|---:|---|
+| `bix-13` | 5 | 0 | 5 | 0 | Deterministic grading only — pure agent noise, zero grader noise by construction |
+| `bix-43` | 5 | 2 | 3 | 0 | Mixed — the within-capsule contrast |
+| `bix-24` | 3 | 3 | 0 | 0 | LLM-graded only — maximum grader exposure |
+
+All three are in the RNA-seq / differential-expression cluster. `bix-13` is the
+load-bearing one: any inconsistency it shows is agent noise and cannot be
+attributed to the grader.
+
 ## Next steps
 
-1. `hf auth login` (interactive — needs a token with access to the gated
-   `futurehouse/BixBench` dataset). Note the CLI rename above: the README's
-   `huggingface-cli login` is a silent no-op.
-2. Run the grader-noise control (Q6) — no agent runs, minimal cost.
-3. Confirm the microbiome-absence finding (Q5) against real capsule metadata.
-4. Run `run_zeroshot.sh` end to end on a small subset.
+1. Run the grader-noise control (Q6) — re-grade shipped baseline answers K times,
+   no agent runs, minimal cost.
+2. Measure per-capsule API cost (Q4) on a handful of real calls.
+3. Run `run_zeroshot.sh` end to end on the three selected capsules.

@@ -318,9 +318,36 @@ All three are in the RNA-seq / differential-expression cluster. `bix-13` is the
 load-bearing one: any inconsistency it shows is agent noise and cannot be
 attributed to the grader.
 
+## Q4, partial: measured grader cost
+
+Measured rather than estimated, per the project's own guardrail. The shipped
+baseline CSV holds the exact question/target/predicted triples the grader sees,
+so the real prompts were tokenized with `tiktoken` against gpt-4o's encoding:
+
+- 83 `llm_verifier` questions
+- **156 input tokens per grading call** (median 154, max 300)
+- ~10 output tokens — the response is just `<grade> correct </grade>`
+
+At gpt-4o list pricing ($2.50 / $10.00 per 1M in/out), the full grader-noise
+control costs:
+
+| Replicates | Calls | Cost |
+|---:|---:|---:|
+| 5 | 415 | ~$0.20 |
+| 10 | 830 | ~$0.41 |
+| **20** | **1,660** | **~$0.81** |
+
+K=20 is the recommendation: under a dollar, and per-question flip rates need the
+replicates far more than the headline does. Agent-run cost (the expensive half of
+Q4) still has to be measured on real trajectories.
+
+**Blocked on credentials.** No `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is present
+in the environment or in any `.env`. Copy `.env.example` to `.env` and fill it in;
+`.env` is gitignored.
+
 ## Next steps
 
-1. Run the grader-noise control (Q6) — re-grade shipped baseline answers K times,
-   no agent runs, minimal cost.
-2. Measure per-capsule API cost (Q4) on a handful of real calls.
-3. Run `run_zeroshot.sh` end to end on the three selected capsules.
+1. Add API keys to `.env` (blocking).
+2. Run the grader-noise control (Q6) at K=20, ~$0.81.
+3. Run `run_zeroshot.sh` end to end on `bix-13`, `bix-43`, `bix-24`.
+4. Measure real agent-run cost (rest of Q4) on those trajectories.

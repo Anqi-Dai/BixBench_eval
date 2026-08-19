@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------------------
+# Secrets. Anything here would have to be rotated, not just deleted, if it
+# ever reached a commit — so it is ignored before the first commit exists.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.key
+*_credentials*
+
+# ---------------------------------------------------------------------------
+# BixBench capsule data. Gated behind Hugging Face auth and not ours to
+# redistribute; also far too large for a portfolio repo. The code that pulls
+# it is committed, the data itself is not.
+# ---------------------------------------------------------------------------
+data/*
+!data/README.md
+
+# ---------------------------------------------------------------------------
+# Raw agent output. Every capsule x question x replicate produces a notebook,
+# so this grows into the hundreds. A curated handful that the failure taxonomy
+# actually quotes gets committed by hand under notebooks/quoted/; the bulk of
+# the run output stays local. The tidy CSV in results/ is the durable artifact.
+# ---------------------------------------------------------------------------
+notebooks/raw/
+runs/
+*.ipynb_checkpoints
+
+# Trajectory / eval harness scratch output
+bixbench_results/
+*.jsonl.gz
+
+# ---------------------------------------------------------------------------
+# Language-specific noise
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# brms/Stan compiles models to shared objects; these are machine-specific and
+# regenerate on demand, so they are rebuilt rather than tracked.
+*.rds
+!results/*.rds
+*.o
+*.so
+
+# ---------------------------------------------------------------------------
+# macOS
+# ---------------------------------------------------------------------------
+.DS_Store

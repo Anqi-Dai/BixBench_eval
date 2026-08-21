@@ -175,18 +175,26 @@ async def main_async(args):
 
     # Containers are torn down here because the harness leaves them running: a
     # dozen accumulated across the pilot runs, one per rollout, none reaped.
-    try:
-        import subprocess
-        ids = subprocess.run(
-            ["docker", "ps", "-aq", "--filter",
-             "ancestor=futurehouse/bixbench:aviary-notebook-env"],
-            capture_output=True, text=True, timeout=30).stdout.split()
-        if ids:
-            subprocess.run(["docker", "rm", "-f", *ids],
-                           capture_output=True, timeout=120)
-            print(f"removed {len(ids)} leftover container(s)")
-    except Exception as e:  # cleanup must never fail a completed run
-        print(f"container cleanup skipped: {type(e).__name__}")
+    #
+    # This removes every container from the bixbench image, which is correct for a
+    # sequential run and destructive for a concurrent one -- it would kill the
+    # containers of any sibling run still working. Pass --no-cleanup when running
+    # capsules in parallel and sweep up afterwards.
+    if args.no_cleanup:
+        print("container cleanup skipped (--no-cleanup)")
+    else:
+      try:
+          import subprocess
+          ids = subprocess.run(
+              ["docker", "ps", "-aq", "--filter",
+               "ancestor=futurehouse/bixbench:aviary-notebook-env"],
+              capture_output=True, text=True, timeout=30).stdout.split()
+          if ids:
+              subprocess.run(["docker", "rm", "-f", *ids],
+                             capture_output=True, timeout=120)
+              print(f"removed {len(ids)} leftover container(s)")
+      except Exception as e:  # cleanup must never fail a completed run
+          print(f"container cleanup skipped: {type(e).__name__}")
 
     # An empty submission may mean the agent declined, exhausted its step budget,
     # or never got a reply from the API. The harness stores all three identically,
@@ -228,6 +236,10 @@ def main():
     ap.add_argument("--capsules", nargs="+", default=["bix-8"])
     ap.add_argument("--replica", type=int, default=0)
     ap.add_argument("--config", default="py/config/pricing_bix8.yaml")
+    ap.add_argument("--no-cleanup", action="store_true",
+                    help="do not remove containers afterwards; required when "
+                         "running capsules concurrently, since cleanup is "
+                         "image-wide and would kill a sibling run's containers")
     ap.add_argument("--skip-preflight", action="store_true",
                     help="skip the four-token API check before starting")
     asyncio.run(main_async(ap.parse_args()))

@@ -405,6 +405,52 @@ async-iterable and every dependency still imports.
 cd ../BixBench-upstream && uv venv --python 3.13 --allow-existing && uv sync --python 3.13
 ```
 
+## The step ceiling truncates most trajectories on two of three capsules
+
+Pilot at `max_steps: 20` (the value in `claude_no_image.yaml`, the paper's Claude
+config), one replica per capsule:
+
+| Capsule | n | At ceiling | Empty answer | Actions used |
+|---|---:|---:|---:|---|
+| `bix-8` | 6 | 0 | 0 | 9, 9, 9, 11, 11, 14 |
+| `bix-43` | 5 | **3** | **2** | 17, 18, 20, 20, 20 |
+| `bix-53` | 5 | **3** | **2** | 14, 17, 20, 20, 20 |
+
+`bix-43` and `bix-53` are **budget-limited, not capability-limited**: their action
+counts sit hard against the ceiling, and four of sixteen trajectories submitted
+nothing at all.
+
+Three consequences.
+
+**An exhausted budget is scored as a wrong answer.** An empty submission goes to
+the grader as an incorrect answer, exactly as a refusal does. Two different
+category collapses now point the same way: BixBench's headline accuracy pools
+"answered wrongly", "declined to answer", and "ran out of steps" into one number.
+
+**Truncation would masquerade as inconsistency.** A question that finishes in 19
+actions on one replicate and truncates at 20 on the next produces two different
+answers for reasons that have nothing to do with reasoning. Without the
+`truncated` and `hit_ceiling` columns now carried in the tidy output, that
+artifact would inflate the headline self-consistency rate directly.
+
+**Cost and truncation are the same phenomenon.** Capsules that exhaust the budget
+cost roughly three times more per rollout, because every step carries the full
+notebook context:
+
+| Capsule | Cost per replica | Per rollout |
+|---|---:|---:|
+| `bix-8` | $1.35 | $0.23 |
+| `bix-43` | $3.22 | $0.64 |
+| `bix-53` | $2.86 | $0.57 |
+
+All three at K=10 is **$74.30**; `bix-8` alone is **$13.53**. The earlier $0.17
+per rollout was an underestimate drawn from the contaminated run, whose duplicate
+rollouts submitted after a single action and dragged the average down.
+
+Note `max_steps: 40` appears in the harness's own `generate_trajectories.yaml`, so
+raising the ceiling is choosing between two shipped values rather than inventing
+one.
+
 ## Next steps
 
 1. Add API keys to `.env` (blocking).

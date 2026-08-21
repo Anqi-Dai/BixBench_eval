@@ -140,10 +140,14 @@ async def main_async(args):
         w = csv.writer(fh)
         if new:
             w.writerow(["run", "model", "calls", "prompt_tokens",
-                        "completion_tokens", "usd", "basis"])
+                        "completion_tokens", "usd", "wall_clock_min", "basis"])
+        # Wall clock is per replica, not per rollout: every question in a capsule
+        # runs concurrently, so this is the slowest single rollout rather than the
+        # sum. For scheduling K replicas of a capsule, multiply by K -- replicas
+        # are separate invocations and run one after another.
         w.writerow([f"agent_{'_'.join(args.capsules)}_rep{args.replica}", model,
                     USAGE["calls"], USAGE["prompt"], USAGE["completion"],
-                    f"{cost:.4f}", "actual"])
+                    f"{cost:.4f}", f"{elapsed/60:.1f}", "actual"])
     print(f"logged to {ledger}")
 
 

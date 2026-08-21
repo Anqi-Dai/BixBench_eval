@@ -188,9 +188,9 @@ async def main_async(args):
         lw = csv.writer(fh)
         if new:
             lw.writerow(["run", "model", "calls", "prompt_tokens",
-                         "completion_tokens", "usd", "basis"])
+                         "completion_tokens", "usd", "wall_clock_min", "basis"])
         lw.writerow([args.label, args.grader, len(rows), tot_in, tot_out,
-                     f"{cost:.4f}", "actual"])
+                     f"{cost:.4f}", "", "actual"])
     print(f"logged to {ledger}")
 
 

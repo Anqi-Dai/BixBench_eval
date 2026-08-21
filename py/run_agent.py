@@ -199,9 +199,14 @@ async def main_async(args):
     # An empty submission may mean the agent declined, exhausted its step budget,
     # or never got a reply from the API. The harness stores all three identically,
     # so the count is surfaced here rather than discovered later in the tidy CSV.
+    # Scoped to this run's capsules and replica. Scanning the whole directory
+    # re-reports every empty answer from earlier pilots on each invocation, which
+    # would bury a genuinely new one in a list of old ones.
     import glob
     empty = []
-    for f in glob.glob(str(gen.config.local_trajectories_dir / "*.json")):
+    patterns = [str(gen.config.local_trajectories_dir / f"{c}-q*_replica_{args.replica}.json")
+                for c in args.capsules]
+    for f in [f for pat in patterns for f in glob.glob(pat)]:
         try:
             d = json.loads(Path(f).read_text())
             if not (d.get("agent_answer") or "").strip():

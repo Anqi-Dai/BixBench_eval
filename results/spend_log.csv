@@ -15,3 +15,8 @@ agent_bix-4_rep0,anthropic/claude-sonnet-4-5-20250929,152,2283674,50981,7.6157,1
 agent_bix-26_rep0,anthropic/claude-sonnet-4-5-20250929,60,680087,21229,2.3587,9.3,actual
 agent_bix-1_rep0,anthropic/claude-sonnet-4-5-20250929,30,234386,9321,0.8430,7.8,actual
 agent_bix-49_rep0,anthropic/claude-sonnet-4-5-20250929,77,616298,21795,2.1758,4.6,actual
+agent_bix-8_rep0,anthropic/claude-sonnet-4-5-20250929,64,369309,15342,1.3381,1.5,actual
+agent_bix-8_rep1,anthropic/claude-sonnet-4-5-20250929,73,448188,16441,1.5912,1.8,actual
+agent_bix-8_rep2,anthropic/claude-sonnet-4-5-20250929,67,443020,17757,1.5954,2.0,actual
+agent_bix-8_rep3,anthropic/claude-sonnet-4-5-20250929,66,395932,16257,1.4317,1.7,actual
+agent_bix-8_rep4,anthropic/claude-sonnet-4-5-20250929,72,442431,17647,1.5920,2.2,actual

@@ -7,8 +7,19 @@ ones. Mean question length does track it, which fits the mechanism: a question
 that spells out a multi-stage pipeline demands more agent actions, and every
 action carries the full notebook context.
 
-The ranking is a screening tool, not a model. It is fitted to three observations,
-so it orders candidates for a cheap pilot rather than replacing one.
+**This predictor failed its first out-of-sample test and should not be trusted.**
+bix-4 has the shortest questions of any candidate (82 chars, against bix-8's 132)
+and was predicted to be cheap. It cost $7.62 per replica, 5.6x bix-8, using 15 to
+40 actions where bix-8 used 9 to 14.
+
+The reason is that question length measures how much a question *specifies*, not
+how much work it *demands*. "What percentage of fungal genes have DVMC values
+below 0.3 using PhyKIT's DVMC function?" is short, and requires running PhyKIT
+across a whole tree set. The apparent fit on the first three capsules was three
+points inside one subject cluster.
+
+The file is kept because the negative result is worth recording: cheap metadata
+does not predict agent cost, and a pilot run is the only reliable estimate.
 
 Usage:
     python py/predict_cost.py --top 20

@@ -9,15 +9,24 @@
 # BSD tail has no --pid, so the "follow until process exits" behavior is built
 # from a poll loop rather than borrowed from GNU tail.
 #
-# Usage: scripts/watch_run.sh <logfile> <pgrep-pattern> [grep-pattern]
+# Re-arming on a log that already has content would otherwise replay its whole
+# history, so a fourth argument sets where to start. Pass "end" to begin at the
+# current end of file, which is what a re-arm wants; the default of 0 reads from
+# the beginning, which is what a fresh run wants.
+#
+# Usage: scripts/watch_run.sh <logfile> <pgrep-pattern> [grep-pattern] [start|end]
 
 set -u
 LOG="$1"
 PROC="$2"
 PAT="${3:-COST|wall clock|Traceback|Error|FAILED|Timeout occurred|docker_host|no questions matched}"
+START="${4:-0}"
 
 # Emit only lines added since the last poll, so nothing is repeated.
 last=0
+if [ "$START" = "end" ]; then
+  last=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+fi
 flush() {
   local n
   n=$(wc -l < "$LOG" 2>/dev/null || echo 0)

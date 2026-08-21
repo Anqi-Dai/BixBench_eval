@@ -35,7 +35,9 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(UPSTREAM))
 
 import litellm  # noqa: E402
+from aviary.core import Message  # noqa: E402
 from bixbench.generate_trajectories import TrajectoryGenerator  # noqa: E402
+from lmi import LiteLLMModel  # noqa: E402
 
 # Accumulated across every model call the agent makes during the run. LiteLLM
 # invokes the callback once per completion, so this ends up counting the agent's

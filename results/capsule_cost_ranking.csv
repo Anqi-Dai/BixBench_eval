@@ -1,0 +1,55 @@
+capsule,n_questions,mean_question_chars,questions_naming_missing_tools,measured_cost_per_replica,categories
+bix-21,1,53,0,,Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-11,6,73,0,,Genomics;Phylogenetics and Evolutionary Analysis
+bix-56,1,77,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-34,6,78,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-4,7,82,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-28,6,84,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-45,4,90,0,,Genomics;Phylogenetics;Whole Genome Sequencing (WGS)
+bix-47,2,91,0,,Genomic Variant Analysis;Genomics
+bix-5,2,92,0,,Differential Expression Analysis;Network Biology;RNA-seq;Transcriptomics
+bix-18,5,100,0,,Imaging
+bix-38,5,106,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-42,2,114,0,,Genomics;Integrative Omics;Machine Learning and Artificial Intelligence;Other;Transcriptomics
+bix-7,3,115,0,,Genomic Variant Analysis;Genomics
+bix-36,4,118,0,,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-33,2,122,0,,Differential Expression Analysis;Single-Cell Analysis
+bix-37,4,126,0,,Differential Expression Analysis;Proteomics;RNA-seq
+bix-46,2,128,0,,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-55,1,132,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-8,6,132,0,1.3525,Differential Expression Analysis;Epigenomics;RNA-seq
+bix-6,6,134,0,,Functional Genomics
+bix-60,1,142,0,,Genomics;Phylogenetics and Evolutionary Analysis
+bix-52,6,146,0,,Epigenomics
+bix-39,1,147,0,,Genomic Variant Analysis;Genomics
+bix-51,7,149,0,,Other
+bix-22,5,151,0,,RNA-seq;Sequence Analysis;Transcriptomics
+bix-16,4,158,0,,Functional Genomics;Transcriptomics
+bix-54,7,158,0,,Imaging
+bix-35,4,160,0,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-2,2,189,0,,Genomic Variant Analysis;Genomics
+bix-19,5,194,0,,Imaging;Other
+bix-24,3,199,0,,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-41,4,199,0,,Imaging
+bix-30,4,202,0,,Differential Expression Analysis;Transcriptomics
+bix-31,4,220,0,,Differential Expression Analysis;RNA-seq;Transcriptomics
+bix-49,5,226,0,,Differential Expression Analysis;RNA-seq;Transcriptomics
+bix-10,7,229,0,,Other
+bix-29,4,245,0,,Other
+bix-27,3,252,0,,Machine Learning and Artificial Intelligence;RNA-seq;Transcriptomics
+bix-32,3,274,0,,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-13,5,275,0,,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-17,1,284,0,,Genomic Variant Analysis;Genomics
+bix-9,3,286,0,,Differential Expression Analysis;RNA-seq;Transcriptomics
+bix-43,5,289,0,3.2203,Differential Expression Analysis;RNA-seq;Transcriptomics
+bix-20,4,291,0,,Genomic Variant Analysis;Genomics
+bix-26,3,302,0,,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-3,5,304,0,,Differential Expression Analysis;RNA-seq;Transcriptomics
+bix-1,2,355,0,,Differential Expression Analysis;Network Biology;RNA-seq;Transcriptomics
+bix-53,5,365,0,2.8571,Differential Expression Analysis;RNA-seq;Sequence Analysis;Transcriptomics
+bix-25,2,64,1,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-12,5,101,2,,Genomics;Phylogenetics and Evolutionary Analysis;Whole Genome Sequencing (WGS)
+bix-58,1,104,1,,Genomics;Phylogenetics and Evolutionary Analysis
+bix-57,1,153,1,,Genomics;Phylogenetics and Evolutionary Analysis
+bix-61,6,201,5,,Antimicrobial Resistance;Genomics;SNP Analysis;Whole Genome Sequencing (WGS)
+bix-14,3,202,1,,Genomic Variant Analysis;Genomics

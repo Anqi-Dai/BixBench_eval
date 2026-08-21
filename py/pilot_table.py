@@ -9,6 +9,10 @@ This produces that second table by joining three sources:
 
   * `BixBench.jsonl`      -- questions, topics, hypothesis, source paper, verifier mix
   * `results/spend_log.csv`  -- measured cost and wall clock per replica
+
+Note that wall clock is per *replica*, not per rollout. Every question in a capsule
+runs concurrently, so the figure is the slowest single rollout and dividing it by
+the question count is meaningless. Cost does divide, since tokens are additive.
   * `results/agent_runs.csv` -- actions used, ceiling hits, missing answers
 
 Capsules that have not been piloted still appear, with the metadata filled in and
@@ -37,7 +41,7 @@ FIELDS = [
     "mean_question_chars", "topics", "hypothesis", "source_paper", "family_size",
     "piloted", "pilot_max_steps", "cost_valid_at_40", "usd_per_replica",
     "min_per_replica", "usd_per_rollout",
-    "min_per_rollout", "actions_min", "actions_median", "actions_max",
+    "actions_min", "actions_median", "actions_max",
     "n_hit_ceiling", "n_empty_answer", "n_correct_exact",
 ]
 
@@ -63,7 +67,7 @@ def load_metadata():
 # 20 would take more actions -- and cost more -- at 40, making its figures a lower
 # bound rather than a measurement.
 PILOT_MAX_STEPS = {"bix-8": 20, "bix-43": 20, "bix-53": 20,
-                   "bix-4": 40, "bix-26": 40, "bix-1": 40}
+                   "bix-4": 40, "bix-26": 40, "bix-1": 40, "bix-49": 40}
 
 
 def load_measured():
@@ -174,7 +178,6 @@ def main():
             "usd_per_replica": f"{m['usd']:.4f}" if m else "",
             "min_per_replica": f"{m['min']:.1f}" if m and m["min"] else "",
             "usd_per_rollout": f"{m['usd']/n:.4f}" if m else "",
-            "min_per_rollout": f"{m['min']/n:.2f}" if m and m["min"] else "",
             "actions_min": min(acts) if acts else "",
             "actions_median": int(statistics.median(acts)) if acts else "",
             "actions_max": max(acts) if acts else "",

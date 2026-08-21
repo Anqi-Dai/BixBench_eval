@@ -1,0 +1,9 @@
+run,model,calls,prompt_tokens,completion_tokens,usd,basis
+preflight,gpt-4o-2024-11-20,3,531,30,0.0016,estimated
+preflight,anthropic/claude-sonnet-4-5-20250929,1,177,10,0.0007,estimated
+smoke_test_1,gpt-4o-2024-11-20,40,7080,400,0.0217,estimated
+smoke_test_1,anthropic/claude-sonnet-4-5-20250929,40,7080,400,0.0272,estimated
+smoke_test_2,gpt-4o-2024-11-20,40,7080,400,0.0217,estimated
+smoke_test_2,anthropic/claude-sonnet-4-5-20250929,40,7080,400,0.0272,estimated
+refusal_audit,gpt-4o-2024-11-20,366,68750,2593,0.1978,actual
+refusal_audit_topup,gpt-4o-2024-11-20,42,9917,302,0.0278,actual

@@ -6,24 +6,84 @@ grader). They can be set separately, and the tradeoffs differ.
 
 ## What the harness actually does
 
+Two grading paths ship, and they do **not** use the same grader. Verified against
+`Future-House/BixBench` @ `4931118`.
+
+### Zero-shot path — one grader for both models
+
 `scripts/run_zeroshot.sh` passes `--model` to `generate_zeroshot_evals.py`, which
 sets the **answering** model. It then calls `grade_outputs.py` with no `--model`,
-so grading always falls back to the default: **`gpt-4o` at temperature 1.0**.
+so grading falls back to the default: **`gpt-4o` at temperature 1.0**
+(`grade_outputs.py:37,40`).
 
-The shipped baseline filenames are therefore misnamed.
-`claude-3-5-sonnet-latest-grader-openended.csv` does not mean "graded by Claude";
-it means "answered by Claude, graded by gpt-4o".
+Both answer sets are therefore graded by gpt-4o. The shipped baseline filenames
+are misnamed: `claude-3-5-sonnet-latest-grader-openended.csv` does not mean
+"graded by Claude"; it means "answered by Claude, graded by gpt-4o".
 
-This produces an asymmetry in BixBench's published comparison:
-
-| Baseline | Answerer | Grader | Self-graded? |
+| Zero-shot baseline | Answerer | Grader | Self-graded? |
 |---|---|---|---|
 | `gpt-4o-grader-*` | gpt-4o | gpt-4o | **yes** |
 | `claude-3-5-sonnet-latest-grader-*` | claude-3-5-sonnet | gpt-4o | no |
 
-If LLM judges favor their own outputs at all, that bias flatters gpt-4o and only
-gpt-4o. Worth stating in the writeup regardless of which option below is taken —
-it costs nothing to observe and no other BixBench commentary appears to note it.
+Asymmetric: any self-preference flatters gpt-4o and only gpt-4o.
+
+### Agentic path — every model grades itself
+
+The agentic runs are graded somewhere else entirely. `run_agentic.sh` calls
+`postprocessing.py`, which calls `postprocessing_utils.run_eval_loop`. That
+function picks the grader by **substring-matching the run name**
+(`postprocessing_utils.py:62-84`):
+
+```python
+models = {
+    "4o": "gpt-4o",
+    "claude": "claude-3-5-sonnet-20241022",
+}
+batch = eval_df.loc[eval_df.run_name.str.contains(model_key), "content"].tolist()
+```
+
+Run names are `4o_image`, `4o_no_image`, `claude_image`, `claude_no_image`, so
+gpt-4o's trajectories are graded by gpt-4o and Claude's by Claude. This holds for
+both eval modes — open-answer (`OPEN_ENDED_EVAL_PROMPT`, a binary 0/1 equivalence
+judgment) and MCQ (`MCQ_EVAL_PROMPT`, which additionally shows the judge the
+notebook).
+
+| Agentic run | Answerer | Grader | Self-graded? |
+|---|---|---|---|
+| `4o_image`, `4o_no_image` | gpt-4o | gpt-4o | **yes** |
+| `claude_image`, `claude_no_image` | claude-3-5-sonnet | claude-3-5-sonnet | **yes** |
+
+Symmetric — but symmetric self-grading is not the same as no self-preference. It
+means **every headline agentic number in the paper is self-graded**. The bias, if
+it exists, is in all of them rather than in one.
+
+No temperature is passed on this path:
+`litellm.acompletion(model=model, messages=message)` takes the provider default.
+
+### The consequence for the paper's main comparison
+
+`run_comparison` in `v1.5_paper_results.yaml` sets `use_zero_shot_baselines: true`
+and maps the zero-shot CSVs onto the same run names as the agentic runs, so both
+are drawn on the same axes. Combining the two tables above:
+
+| Comparison drawn | Baseline grader | Agentic grader | Grader held constant? |
+|---|---|---|---|
+| gpt-4o: zero-shot vs agentic | gpt-4o | gpt-4o | yes |
+| Claude: zero-shot vs agentic | gpt-4o | claude-3-5-sonnet | **no** |
+
+The Claude agentic-versus-baseline delta is confounded with a change of grader.
+The gpt-4o one is not. Worth stating in the writeup regardless of which option
+below is taken — it costs nothing to observe and no other BixBench commentary
+appears to note it.
+
+### Practical trap for this study's own runs
+
+`run_name` is a free-text field in the run-configuration YAML (`claude_image.yaml`
+ends with `run_name: claude_image`), and the grader is selected by `str.contains`
+over that string. A replicate run named without `claude` or `4o` in it is
+**silently never graded** — `llm_answer` stays `None` and those rows drop out.
+Any custom run config for this study must keep the substring, or grading has to
+be invoked directly rather than through `postprocessing.py`.
 
 ## The agent: Claude
 
@@ -38,10 +98,15 @@ cost.
 | | |
 |---|---|
 | Cost | One provider, one key |
-| Loses | Comparability to published numbers (which are all gpt-4o-graded) |
+| Matches | **The shipped agentic configuration exactly** — this is what the paper did |
 | Risk | Self-preference: Claude judging Claude's own answers |
 
-The self-preference risk is **much smaller for this study than it would be for an
+**This inverts the earlier reading of Option A.** This study runs the agentic
+path, and on that path the shipped grader is model-matched. Claude grading Claude
+is therefore not a deviation from the benchmark — it reproduces it. Option A
+gains comparability to the published agentic numbers rather than losing it.
+
+The self-preference risk is unchanged, and is **much smaller for this study than it would be for an
 accuracy claim**. The headline is self-consistency across replicates — whether
 the agent contradicts itself. A grader with a constant bias toward one style
 shifts the accuracy *level*; it does not manufacture *inconsistency*. So:
@@ -50,10 +115,12 @@ shifts the accuracy *level*; it does not manufacture *inconsistency*. So:
 - **Q2 (accuracy posterior) is not** — the level would be biased upward, and any
   stated accuracy would need an explicit caveat.
 
-### Option B — gpt-4o grades Claude (the harness default)
+### Option B — gpt-4o grades Claude
 
-Matches the shipped configuration exactly, so results sit alongside published
-numbers. No self-preference confound. Requires an OpenAI key.
+Matches the *zero-shot* default, not the agentic one. Breaking the self-grading
+loop makes it the cleaner instrument, and there is no self-preference confound —
+but it reproduces no shipped configuration for agentic runs, so its numbers do
+not sit directly alongside the paper's agentic bars. Requires an OpenAI key.
 
 ### Option C — grade the same answers with both
 
@@ -73,14 +140,23 @@ has a ceiling on how precisely it can rank anything.
 
 **Grader: Option C if an OpenAI key is obtainable, Option A if not.**
 
-The reasoning is cost asymmetry. Grading is nearly free relative to agent runs,
-and the answers being graded are identical, so a second grader buys a whole
-additional finding for pocket change. Claude can still be the *primary* grader,
-with gpt-4o as the control.
+Two reasons, and the second is stronger than it was before the agentic grading
+path was traced.
 
-If only Claude is available, the study is still sound — but the writeup should
-scope its claims to **consistency rather than accuracy level**, and say plainly
-that the grader shares a model family with the agent.
+**Cost asymmetry.** Grading is nearly free relative to agent runs, and the
+answers being graded are identical, so a second grader buys a whole additional
+finding for pocket change.
+
+**Claude is the *primary* grader on the merits, not as a fallback.** It is what
+the shipped agentic configuration uses, so Claude-graded results are the ones
+comparable to the paper's agentic numbers. gpt-4o is then the control that breaks
+the self-grading loop — the deviation, deliberately introduced, rather than the
+reference.
+
+If only Claude is available, the study is still sound and still reproduces the
+shipped setup — but the writeup should scope its claims to **consistency rather
+than accuracy level**, and say plainly that the grader shares a model family with
+the agent, exactly as the paper's own agentic numbers do.
 
 ## Aims by option
 
@@ -89,13 +165,21 @@ that the grader shares a model family with the agent.
 | Lead finding | Agent self-consistency across replicates at temperature 1.0 | Same |
 | Grader-noise control | Claude regrading identical answers K times | Both graders, separately |
 | Third finding | — | Cross-grader disagreement rate |
-| Accuracy claim | Caveated; self-preference unquantified | Clean, comparable to published |
+| Matches shipped agentic setup | Yes | Yes, plus a control arm |
+| Accuracy claim | Comparable to the paper's agentic numbers, but self-preference unquantified | Self-preference quantified; both grader regimes reported |
 | Extra cost | $0 | < $1 |
 | Extra complexity | None | One more API key |
 
 ---
 
 # Quantifying self-preference (Option C, chosen)
+
+**Why this matters more than it first appeared.** Before the agentic grading path
+was traced, self-preference looked like a limitation of *this study's* grader
+choice. It is more than that: because every agentic run in BixBench is graded by
+its own model, self-preference — if real — is baked into every headline number
+the paper reports, not just into a design decision made here. Measuring it is
+therefore a result about the benchmark, not a caveat about the replication.
 
 ## The identification problem
 

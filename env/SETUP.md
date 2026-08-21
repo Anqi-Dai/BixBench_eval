@@ -381,6 +381,30 @@ present in the environment or in any `.env`. They belong in
 `../BixBench-upstream/.env`, since `generate_zeroshot_evals.py` resolves
 `Path(".env")` relative to the working directory.
 
+## The harness's declared Python floor is wrong
+
+`pyproject.toml` says `requires-python = ">=3.12"`. The agentic path does not run
+on 3.12.
+
+`bixbench/utils.py:135` iterates `async for future in asyncio.as_completed(...)`.
+`asyncio.as_completed` returned a plain generator until Python 3.13, which made it
+async-iterable. On 3.12 the run dies at the first batch with:
+
+```
+TypeError: 'async for' requires an object with __aiter__ method, got generator
+```
+
+The zero-shot path never touches that helper, so the mismatch stays hidden until
+the first agentic run -- after the Docker image is pulled and the capsule data is
+downloaded. Nothing was billed, since the crash happens before any agent step.
+
+Environment rebuilt on **CPython 3.13.15**, where `asyncio.as_completed` is
+async-iterable and every dependency still imports.
+
+```bash
+cd ../BixBench-upstream && uv venv --python 3.13 --allow-existing && uv sync --python 3.13
+```
+
 ## Next steps
 
 1. Add API keys to `.env` (blocking).

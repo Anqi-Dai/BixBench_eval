@@ -265,3 +265,129 @@ question across replicates rather than treating those draws as independent.
 - **Extension, once the agent runs exist:** add the Claude agent's own answers as
   a third answer set. That gives true within-model self-preference for the model
   actually under test, at no extra agent cost since those runs are needed anyway.
+
+---
+
+# What the K=10 dataset can answer
+
+Scope of the run about to start: **3 capsules, 14 questions, 10 replicates = 140
+agent trajectories**, one model (claude-sonnet-4-5, pinned), temperature 1.0,
+`max_steps: 40`.
+
+| Capsule | Questions | Topics |
+|---|---:|---|
+| `bix-8` | 6 | Differential expression, epigenomics, RNA-seq |
+| `bix-49` | 5 | Differential expression, RNA-seq, transcriptomics |
+| `bix-26` | 3 | Differential expression, RNA-seq, sequence analysis |
+
+`bix-49` and `bix-26` come from different source papers than each other and than
+`bix-8`, so the three capsules are independent. `bix-1` was dropped in favor of
+`bix-49` because they share a source paper and `bix-49` carries five questions
+against two.
+
+## The property that makes this work: every ground truth is numeric
+
+All 14 questions have a numeric answer -- counts, ratios, p-values, percentages.
+That matters more than it sounds.
+
+**Replicate agreement can be computed without a grader.** Parse the number out of
+each of the 10 answers to a question and compare them directly. No LLM judgment
+enters the measurement, so the headline self-consistency figure is immune to the
+grader noise that this project spent Phase 0 characterizing. That is a stronger
+position than the original plan, which assumed consistency would have to be
+measured through graded outcomes.
+
+Grading is still needed for accuracy, and stays a separate replicated step.
+
+## Q1 -- Self-consistency (the lead finding)
+
+**Answerable, and well powered for the question level.**
+
+For each question, 10 answers give C(10,2) = 45 pairwise comparisons; 14 questions
+give 630 within-question pairs. Reported as:
+
+- **Exact agreement**: fraction of pairs whose parsed numbers are identical.
+- **Tolerance agreement**: same, within 1% and within 5%, since "1.33" and
+  "1.3307" are the same answer and a string comparison would call them different.
+- **Modal-answer share**: how often the most common answer appears across the 10.
+- **Distinct-answer count** per question: 1 means perfectly stable, 10 means the
+  agent never repeats itself.
+
+Truncated trajectories are excluded before this is computed, and reported
+separately, so budget exhaustion cannot masquerade as disagreement.
+
+## Q2 -- Uncertainty via a multilevel model
+
+**Answerable at the question level; weak at the capsule level. Say so.**
+
+```r
+brm(correct ~ 1 + (1 | capsule / question), family = bernoulli(), ...)
+```
+
+- **Question intercepts**: 14 groups, 10 observations each. Reasonably identified.
+- **Capsule intercepts**: 3 groups. The between-capsule SD will be
+  prior-dominated with a wide posterior. Use a weakly-informative prior and report
+  the capsule effects as partially pooled estimates, not as a measured variance.
+
+The same structure serves the consistency outcome, with agreement as a
+question-level proportion rather than a per-trajectory Bernoulli.
+
+Worth modelling as covariates: `num_actions` (does a longer trajectory predict a
+worse answer?) and `hit_ceiling`.
+
+## Q3 -- Failure taxonomy
+
+**Answerable, and replicates make it richer than planned.**
+
+140 notebooks, all inline in the trajectory JSONs. The new angle: read the **10
+notebooks for the same question** side by side. The original plan was to classify
+how the agent failed; with replicates it becomes possible to ask whether it fails
+the *same way* each time, or arrives at different answers by different routes.
+A benchmark score cannot distinguish those, and a domain reader can.
+
+`bix-8` is the closest to the reviewer's expertise (m6A methylation in bladder
+cancer, differential expression) and is where the reading should start.
+
+## Q0 -- Grading instrumentation
+
+**Partly answered already; extendable to the agent data.**
+
+Measured on the shipped zero-shot baselines: 71.4% of answers scored incorrect are
+the model declining to answer. Open on agent answers, where the refusal rate looks
+far lower -- the pilot agent answered nearly everything it was asked.
+
+The agent data adds a category the zero-shot data could not show: **empty answers
+from budget exhaustion**. Five of 33 pilot trajectories submitted nothing, and all
+five grade as wrong answers.
+
+## Grader noise, on the right substrate
+
+The zero-shot baselines were a poor substrate: 2.9% correct, so almost every
+answer was unambiguously wrong and graders agreed trivially. Agent answers are
+borderline in the way that generates disagreement -- `bix-49-q5` returned 3.87
+against a ground truth of 3.83, and `bix-8-q5` returned 8.1e-194 against
+"p < 2.2e-16", which is arguably correct and a coin flip to grade.
+
+Re-grading the 140 answers K times with both graders yields:
+
+- **grader-resampling noise**: same grader, same answer, different verdicts.
+- **cross-grader disagreement**: gpt-4o against Claude on identical answers.
+
+Cost is trivial next to the agent runs, since the answers already exist.
+
+## What this dataset cannot answer
+
+State these plainly rather than let a reader assume them:
+
+- **Self-preference.** Identifying it needs the 2x2 of two answer sets by two
+  graders. Only Claude agent answers will exist, so the interaction is not
+  estimable on agentic data. The zero-shot 2x2 remains possible but is
+  underpowered at 2.9% accuracy.
+- **Cross-model comparison.** One model, by design.
+- **Temperature dependence.** Only 1.0, the shipped default. The sweep floated in
+  the original brief is out of budget; the finding is a point on a curve, not the
+  curve.
+- **Generalization to the full benchmark.** Three of 54 capsules, chosen partly
+  for cost. Any rate reported is for these capsules, not for BixBench.
+- **Whether the agent's answer is scientifically right.** Ground truth is the
+  capsule author's number. Agreement with it is what gets measured.

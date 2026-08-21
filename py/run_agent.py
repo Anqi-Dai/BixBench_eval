@@ -85,6 +85,21 @@ class FilteredGenerator(TrajectoryGenerator):
             sys.exit(f"no questions matched capsules: {sorted(self.capsules)}")
         print(f"selected {len(kept)} questions from {sorted({r['short_id'] for r in kept})}")
 
+        # Force a single batch. The harness's run loop steps by `batch_size` but
+        # slices `bixbench[i : i + 4*batch_size]`, so consecutive batches overlap
+        # and questions are rolled out several times each -- about 3.3x the
+        # necessary work at the shipped batch_size of 24 over 205 questions.
+        #
+        # The duplicates are worse than wasted spend. Each rollout reuses the same
+        # working directory, and fhda's NotebookEnv reloads any notebook it finds
+        # there (notebook_env.py:48). So a repeat rollout resumes from the previous
+        # attempt's finished notebook, typically submits within one action, and
+        # overwrites the clean trajectory. Sizing the batch to cover every question
+        # makes the loop run once and keeps each trajectory an independent draw.
+        self.config.rollout.batch_size = max(len(kept), 1)
+        print(f"batch_size set to {self.config.rollout.batch_size} "
+              f"to avoid overlapping-batch reruns")
+
         # Fetch only the archives the kept questions actually reference.
         zips = {r["data_folder"] for r in kept}
         await asyncio.gather(*(self.process_capsule_data(z) for z in zips))

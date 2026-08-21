@@ -7,3 +7,4 @@ smoke_test_2,gpt-4o-2024-11-20,40,7080,400,0.0217,estimated
 smoke_test_2,anthropic/claude-sonnet-4-5-20250929,40,7080,400,0.0272,estimated
 refusal_audit,gpt-4o-2024-11-20,366,68750,2593,0.1978,actual
 refusal_audit_topup,gpt-4o-2024-11-20,42,9917,302,0.0278,actual
+agent_bix-8_rep0,anthropic/claude-sonnet-4-5-20250929,69,431229,15504,1.5262,actual

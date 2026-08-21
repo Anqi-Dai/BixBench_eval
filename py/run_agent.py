@@ -22,6 +22,7 @@ Usage:
 import argparse
 import asyncio
 import csv
+import json
 import os
 import sys
 import time
@@ -58,6 +59,37 @@ litellm._async_success_callback = [_track]
 
 # USD per million tokens, list pricing.
 PRICES = {"anthropic/claude-sonnet-4-5-20250929": (3.00, 15.00)}
+
+
+
+async def preflight(model: str) -> None:
+    """Fail fast if the API cannot actually serve this model.
+
+    Neither Anthropic nor OpenAI exposes a credit-balance endpoint, so the only
+    way to check spendability is to spend a little: a four-token completion costs
+    a fraction of a cent and surfaces an exhausted balance, a bad key, or a
+    retired model id before a multi-hour run starts.
+
+    This exists because an exhausted balance does not fail cleanly. The configured
+    num_retries of 5 treats a permanent billing error like a transient rate limit,
+    so the run slows to a crawl and then stores trajectories whose answers are
+    empty because the API never replied -- indistinguishable, downstream, from an
+    agent that chose not to answer.
+    """
+    client = LiteLLMModel(name=model, config={"name": model, "max_tokens": 4,
+                                              "num_retries": 0})
+    try:
+        await client.call_single([Message(content="ping")])
+    except Exception as e:
+        msg = str(e)
+        hint = ""
+        if "credit balance" in msg.lower() or "billing" in msg.lower():
+            hint = ("\n  -> The API balance is exhausted. Top it up before running;"
+                    "\n     a run started now would retry, slow down, and record"
+                    "\n     empty answers that look like agent failures.")
+        elif "not_found" in msg.lower() or "404" in msg:
+            hint = f"\n  -> Model id {model!r} is not available on this account."
+        sys.exit(f"preflight failed: {type(e).__name__}: {msg[:200]}{hint}")
 
 
 class FilteredGenerator(TrajectoryGenerator):
@@ -117,6 +149,11 @@ async def main_async(args):
     os.chdir(UPSTREAM)
 
     gen = FilteredGenerator(REPO / args.config, args.replica, args.capsules)
+
+    if not args.skip_preflight:
+        await preflight(gen.config.agent.agent_kwargs["llm_model"]["name"])
+        print("preflight ok")
+
     started = time.time()
     await gen.run()
     elapsed = time.time() - started
@@ -149,6 +186,24 @@ async def main_async(args):
     except Exception as e:  # cleanup must never fail a completed run
         print(f"container cleanup skipped: {type(e).__name__}")
 
+    # An empty submission may mean the agent declined, exhausted its step budget,
+    # or never got a reply from the API. The harness stores all three identically,
+    # so the count is surfaced here rather than discovered later in the tidy CSV.
+    import glob
+    empty = []
+    for f in glob.glob(str(gen.config.local_trajectories_dir / "*.json")):
+        try:
+            d = json.loads(Path(f).read_text())
+            if not (d.get("agent_answer") or "").strip():
+                empty.append(Path(f).stem)
+        except Exception:
+            continue
+    if empty:
+        print(f"WARNING: {len(empty)} trajectory(ies) have no answer: "
+              f"{', '.join(sorted(empty)[:8])}")
+        print("         check whether the API was failing before treating these "
+              "as agent behavior")
+
     ledger = REPO / "results/spend_log.csv"
     new = not ledger.exists()
     with ledger.open("a", newline="") as fh:
@@ -171,6 +226,8 @@ def main():
     ap.add_argument("--capsules", nargs="+", default=["bix-8"])
     ap.add_argument("--replica", type=int, default=0)
     ap.add_argument("--config", default="py/config/pricing_bix8.yaml")
+    ap.add_argument("--skip-preflight", action="store_true",
+                    help="skip the four-token API check before starting")
     asyncio.run(main_async(ap.parse_args()))
 
 

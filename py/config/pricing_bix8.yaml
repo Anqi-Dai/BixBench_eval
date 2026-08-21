@@ -1,9 +1,9 @@
 # Pricing run: one capsule, one replica.
 #
-# Based on the shipped claude_no_image.yaml -- the configuration behind the
-# paper's Claude agentic numbers -- with only the model swapped. SimpleAgent,
-# max_steps 20 and avoid_images are all kept as published so this run stays
-# comparable to what BixBench reports.
+# Based on the shipped claude_no_image.yaml, the configuration behind the paper's
+# Claude agentic numbers. SimpleAgent and avoid_images are kept as published so
+# this stays comparable to what BixBench reports; the model and max_steps are
+# changed deliberately, for the reasons given below.
 #
 # The model changed because it had to: claude-3-5-sonnet-20241022 is retired and
 # no longer callable. A pinned dated snapshot is used rather than a floating
@@ -19,10 +19,21 @@ agent:
       name: anthropic/claude-sonnet-4-5-20250929
     hide_old_env_states: true
 rollout:
-  # batch_size is well below the shipped 24: this capsule has 6 questions and
+  # batch_size is well below the shipped 24: these capsules have 5-7 questions and
   # running them all at once invites rate limiting during a measurement whose
-  # whole purpose is a clean cost number.
-  max_steps: 20
+  # whole purpose is a clean cost number. run_agent.py resets it to the question
+  # count anyway, to avoid the harness's overlapping-batch reruns.
+  #
+  # max_steps is 40, the value in the harness's own generate_trajectories.yaml,
+  # rather than the 20 in claude_no_image.yaml. A ceiling costs nothing until it
+  # binds -- a trajectory finishing in 12 actions is identical either way -- so
+  # raising it is free for capsules that complete early and prevents truncation
+  # for those that do not. It is also censorable after the fact: with num_actions
+  # recorded, the runs that would have truncated at 20 can be identified and that
+  # rate reported. The reverse is impossible, which is what makes 40 the more
+  # informative choice. What cannot be recovered is the answer such a run would
+  # have submitted at step 20, since it kept going instead.
+  max_steps: 40
   batch_size: 3
   rollout_type: aviary
 notebook:

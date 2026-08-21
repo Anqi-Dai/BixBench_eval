@@ -33,3 +33,5 @@ agent_bix-49_rep5,anthropic/claude-sonnet-4-5-20250929,95,777377,27355,2.7425,4.
 agent_bix-49_rep6,anthropic/claude-sonnet-4-5-20250929,94,755519,24230,2.6300,7.6,actual
 agent_bix-49_rep7,anthropic/claude-sonnet-4-5-20250929,86,699287,22729,2.4388,21.1,actual
 agent_bix-49_rep8,anthropic/claude-sonnet-4-5-20250929,100,928504,25788,3.1723,6.6,actual
+agent_bix-49_rep9,anthropic/claude-sonnet-4-5-20250929,86,691506,23382,2.4252,5.2,actual
+agent_bix-26_rep1,anthropic/claude-sonnet-4-5-20250929,55,468133,16337,1.6495,3.7,actual

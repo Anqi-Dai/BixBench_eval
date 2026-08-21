@@ -134,6 +134,21 @@ async def main_async(args):
     print(f"COST          : ${cost:.4f}")
     print(f"{'='*60}")
 
+    # Containers are torn down here because the harness leaves them running: a
+    # dozen accumulated across the pilot runs, one per rollout, none reaped.
+    try:
+        import subprocess
+        ids = subprocess.run(
+            ["docker", "ps", "-aq", "--filter",
+             "ancestor=futurehouse/bixbench:aviary-notebook-env"],
+            capture_output=True, text=True, timeout=30).stdout.split()
+        if ids:
+            subprocess.run(["docker", "rm", "-f", *ids],
+                           capture_output=True, timeout=120)
+            print(f"removed {len(ids)} leftover container(s)")
+    except Exception as e:  # cleanup must never fail a completed run
+        print(f"container cleanup skipped: {type(e).__name__}")
+
     ledger = REPO / "results/spend_log.csv"
     new = not ledger.exists()
     with ledger.open("a", newline="") as fh:

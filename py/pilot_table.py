@@ -35,7 +35,8 @@ REPO_ID = "futurehouse/BixBench"
 FIELDS = [
     "capsule", "n_questions", "n_llm_verifier", "n_str_verifier", "n_range_verifier",
     "mean_question_chars", "topics", "hypothesis", "source_paper", "family_size",
-    "piloted", "usd_per_replica", "min_per_replica", "usd_per_rollout",
+    "piloted", "pilot_max_steps", "cost_valid_at_40", "usd_per_replica",
+    "min_per_replica", "usd_per_rollout",
     "min_per_rollout", "actions_min", "actions_median", "actions_max",
     "n_hit_ceiling", "n_empty_answer", "n_correct_exact",
 ]
@@ -55,6 +56,14 @@ def parse_categories(raw):
 def load_metadata():
     path = hf_hub_download(REPO_ID, "BixBench.jsonl", repo_type="dataset")
     return [json.loads(line) for line in open(path)]
+
+
+# The step ceiling changed partway through piloting, so which setting a capsule
+# was measured under has to travel with its numbers. A capsule that truncated at
+# 20 would take more actions -- and cost more -- at 40, making its figures a lower
+# bound rather than a measurement.
+PILOT_MAX_STEPS = {"bix-8": 20, "bix-43": 20, "bix-53": 20,
+                   "bix-4": 40, "bix-26": 40, "bix-1": 40}
 
 
 def load_measured():
@@ -155,6 +164,13 @@ def main():
             "source_paper": paper,
             "family_size": fam.get(c["paper"], 1) if paper else 1,
             "piloted": bool(m),
+            "pilot_max_steps": PILOT_MAX_STEPS.get(sid, "") if m else "",
+            # Valid at a ceiling of 40 only if the run never reached its own
+            # ceiling; otherwise the cost is a floor, not an estimate.
+            "cost_valid_at_40": (
+                bool(m) and (PILOT_MAX_STEPS.get(sid) == 40
+                             or (acts and max(acts) < PILOT_MAX_STEPS.get(sid, 0)))
+            ) if m else "",
             "usd_per_replica": f"{m['usd']:.4f}" if m else "",
             "min_per_replica": f"{m['min']:.1f}" if m and m["min"] else "",
             "usd_per_rollout": f"{m['usd']/n:.4f}" if m else "",

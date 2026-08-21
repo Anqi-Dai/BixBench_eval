@@ -1,0 +1,48 @@
+# Pricing run: one capsule, one replica.
+#
+# Based on the shipped claude_no_image.yaml -- the configuration behind the
+# paper's Claude agentic numbers -- with only the model swapped. SimpleAgent,
+# max_steps 20 and avoid_images are all kept as published so this run stays
+# comparable to what BixBench reports.
+#
+# The model changed because it had to: claude-3-5-sonnet-20241022 is retired and
+# no longer callable. A pinned dated snapshot is used rather than a floating
+# alias, since an alias repointing between replicates would be indistinguishable
+# from the run-to-run variation this project exists to measure.
+agent:
+  agent_type: SimpleAgent
+  agent_kwargs:
+    llm_model:
+      parallel_tool_calls: false
+      num_retries: 5
+      temperature: 1.0
+      name: anthropic/claude-sonnet-4-5-20250929
+    hide_old_env_states: true
+rollout:
+  # batch_size is well below the shipped 24: this capsule has 6 questions and
+  # running them all at once invites rate limiting during a measurement whose
+  # whole purpose is a clean cost number.
+  max_steps: 20
+  batch_size: 3
+  rollout_type: aviary
+notebook:
+  name: notebook.ipynb
+  language: python
+  use_docker: true
+capsule:
+  prompt_templates:
+    mcq: MCQ_PROMPT_TEMPLATE
+    open: OPEN_PROMPT_TEMPLATE
+    hypothesis: HYPOTHESIS_PROMPT_TEMPLATE
+  eval_mode: null
+  mode: open
+  include_refusal_option: true
+  avoid_images: true
+  system_prompt: CAPSULE_SYSTEM_PROMPT_OPEN
+paths:
+  workspace_dir: data/workspace
+  trajectories_dir: data/trajectories/pricing_bix8
+  data_folder: data/capsules
+  hf_repo_id: futurehouse/BixBench
+dataset_split: train
+run_name: pricing_bix8_claude45

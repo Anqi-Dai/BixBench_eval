@@ -43,6 +43,7 @@ Usage:
 import argparse
 import asyncio
 import csv
+import json
 import os
 import re
 import sys
@@ -54,6 +55,7 @@ from dotenv import load_dotenv
 # because generate_zeroshot_evals.py resolves Path(".env") against the working
 # directory it is run from.
 UPSTREAM = Path(__file__).resolve().parent.parent.parent / "BixBench-upstream"
+REPO = Path(__file__).resolve().parent.parent
 
 # The harness is a plain package directory rather than an installed distribution,
 # so it only imports when the clone is on the path. Adding it explicitly lets this
@@ -72,6 +74,14 @@ ANSWER_SETS = {
         "claude-3-5-sonnet-latest-grader-openended.csv"
     ),
 }
+
+# The agent's own answers, from results/agent_runs.csv rather than the shipped
+# baselines. This is the substrate that matters: the zero-shot baselines score
+# 2.9% correct, so almost every answer is unambiguously wrong and graders agree
+# trivially. Agent answers are borderline in the way that actually produces
+# disagreement -- 3.87 against a ground truth of 3.83, or 8.1e-194 against
+# "p < 2.2e-16".
+AGENT_RUNS = "results/agent_runs.csv"
 
 # Both graders are pinned to dated snapshots rather than floating aliases
 # ("gpt-4o", "claude-sonnet-5"). In a study whose subject is grader noise, an
@@ -128,6 +138,47 @@ def load_answer_sets(selected):
     return out
 
 
+def load_agent_answers(capsules, questions_by_id):
+    """Read the agent's answers and reshape them into the grader's row format.
+
+    Trajectories with no answer are skipped rather than graded. Sending an empty
+    submission to the grader would return "incorrect", which is exactly the
+    collapse this project documents -- an agent that never answered is not an
+    agent that answered wrongly.
+
+    The question text lives in the dataset metadata rather than in agent_runs.csv,
+    so it is joined back in by question_id; the grader prompt needs it.
+    """
+    path = REPO / "results/agent_runs.csv"
+    out = []
+    for r in csv.DictReader(path.open()):
+        if capsules and r["capsule"] not in capsules:
+            continue
+        if r["has_answer"] != "True":
+            continue
+        q = questions_by_id.get(r["question_id"])
+        if q is None:
+            continue
+        out.append({
+            "uuid": f"{r['question_id']}_replica_{r['replica']}",
+            "question": q,
+            "predicted": r["agent_answer"],
+            "target": r["ideal_answer"],
+            "evaluation_mode": r["eval_mode"] or "llm_verifier",
+            "answer_set": "claude-agent",
+        })
+    return out
+
+
+def load_question_text():
+    """question_id -> question text, from the dataset metadata."""
+    from huggingface_hub import hf_hub_download
+    path = hf_hub_download("futurehouse/BixBench", "BixBench.jsonl",
+                           repo_type="dataset")
+    return {json.loads(line)["question_id"]: json.loads(line)["question"]
+            for line in open(path)}
+
+
 def make_client(model_name: str, temperature: float):
     """One LLM client per grader model, reused across all its calls."""
     return LiteLLMModel(
@@ -182,7 +233,12 @@ async def main_async(args):
         if not os.getenv(var):
             sys.exit(f"{var} not set; expected it in {UPSTREAM / '.env'}")
 
-    rows = load_answer_sets(args.answer_sets)
+    if args.agent_answers:
+        rows = load_agent_answers(set(args.capsules), load_question_text())
+        print(f"grading {len(rows)} agent answers "
+              f"({', '.join(sorted(args.capsules))})")
+    else:
+        rows = load_answer_sets(args.answer_sets)
     # A capped run exists to prove the plumbing works, not to measure anything;
     # the cap takes the first N questions of each answer set so both sides stay
     # aligned on the same questions.
@@ -277,6 +333,12 @@ def main():
     ap.add_argument("--max-questions", type=int, default=0,
                     help="cap questions per answer set; 0 means all. For smoke "
                          "tests only -- a capped run is not a valid measurement")
+    ap.add_argument("--agent-answers", action="store_true",
+                    help="grade the agent's own answers from results/agent_runs.csv "
+                         "instead of the shipped zero-shot baselines")
+    ap.add_argument("--capsules", nargs="+",
+                    default=["bix-8", "bix-49", "bix-26"],
+                    help="capsules to include when --agent-answers is set")
     ap.add_argument("--out", default="results/grader_noise.csv")
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--flush-every", type=int, default=200,

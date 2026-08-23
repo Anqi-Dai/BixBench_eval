@@ -43,3 +43,6 @@ agent_bix-26_rep6,anthropic/claude-sonnet-4-5-20250929,46,352771,12067,1.2393,21
 agent_bix-26_rep7,anthropic/claude-sonnet-4-5-20250929,59,501745,15378,1.7359,3.8,actual
 agent_bix-26_rep8,anthropic/claude-sonnet-4-5-20250929,49,358872,13408,1.2777,21.6,actual
 agent_bix-26_rep9,anthropic/claude-sonnet-4-5-20250929,78,1077614,25629,3.6173,21.5,actual
+grader_noise_agent_gpt4o,gpt-4o-2024-11-20,1300,193700,13000,0.6142,,"estimated (grader run, tokens not tracked)"
+grader_noise_agent_claude,anthropic/claude-sonnet-4-5-20250929,1300,193700,13000,0.7761,,"estimated (grader run, tokens not tracked)"
+grader_noise_agent_gpt5,gpt-5-2025-08-07,1300,193700,13000,0.3721,,"estimated (grader run, tokens not tracked)"

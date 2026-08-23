@@ -179,8 +179,34 @@ def load_question_text():
             for line in open(path)}
 
 
+# Current OpenAI models reject `max_tokens` and require `max_completion_tokens`.
+# lmi hardcodes `max_tokens` into litellm_params (llms.py:492) whenever no explicit
+# model_list is supplied, with a carve-out only for Gemini, so the harness as
+# shipped cannot call any gpt-5-family model at all. Supplying model_list
+# ourselves is what routes around it.
+NEEDS_MAX_COMPLETION_TOKENS = ("gpt-5", "o3", "o4")
+
+
 def make_client(model_name: str, temperature: float):
     """One LLM client per grader model, reused across all its calls."""
+    bare = model_name.split("/")[-1]
+    if bare.startswith(NEEDS_MAX_COMPLETION_TOKENS):
+        return LiteLLMModel(
+            name=model_name,
+            config={
+                "name": model_name,
+                "num_retries": 5,
+                "model_list": [{
+                    "model_name": model_name,
+                    "litellm_params": {
+                        "model": model_name,
+                        "n": 1,
+                        "temperature": temperature,
+                        "max_completion_tokens": 4096,
+                    },
+                }],
+            },
+        )
     return LiteLLMModel(
         name=model_name,
         config={"name": model_name, "temperature": temperature, "num_retries": 5},

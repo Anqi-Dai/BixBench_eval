@@ -1,0 +1,147 @@
+Two-stage model summary — 2026-08-23 22:25:16 
+Data: 140 runs (3 capsules x 10 replicates), 130 answered.
+
+========== stage 1: responded (all 140 runs) ==========
+ Family: bernoulli 
+  Links: mu = logit 
+Formula: responded ~ 1 + (1 | capsule/question) 
+   Data: data (Number of observations: 140) 
+  Draws: 4 chains, each with iter = 4000; warmup = 1000; thin = 1;
+         total post-warmup draws = 12000
+
+Multilevel Hyperparameters:
+~capsule (Number of levels: 3) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     1.99      0.84     0.64     3.89 1.00     6226     4728
+
+~capsule:question (Number of levels: 14) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     0.64      0.50     0.02     1.87 1.00     5476     5364
+
+Regression Coefficients:
+          Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept     2.01      1.04    -0.24     3.86 1.00     6013     8065
+
+Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).
+
+Typical-question rate (median [95% CI]):
+  50%  2.5% 97.5% 
+0.890 0.441 0.979 
+
+Per-question partially pooled rates:
+# A tibble: 14 × 6
+   capsule question   rate  lo95  hi95 n_obs
+   <chr>   <chr>     <dbl> <dbl> <dbl> <int>
+ 1 bix-26  bix-26-q3 0.714 0.433 0.884    10
+ 2 bix-26  bix-26-q4 0.747 0.506 0.906    10
+ 3 bix-26  bix-26-q5 0.813 0.591 0.965    10
+ 4 bix-49  bix-49-q1 0.967 0.872 0.998    10
+ 5 bix-49  bix-49-q2 0.967 0.874 0.997    10
+ 6 bix-49  bix-49-q3 0.966 0.87  0.998    10
+ 7 bix-49  bix-49-q4 0.955 0.82  0.993    10
+ 8 bix-49  bix-49-q5 0.955 0.82  0.993    10
+ 9 bix-8   bix-8-q1  0.992 0.933 1        10
+10 bix-8   bix-8-q2  0.992 0.934 1        10
+11 bix-8   bix-8-q3  0.992 0.931 1        10
+12 bix-8   bix-8-q5  0.992 0.931 1        10
+13 bix-8   bix-8-q6  0.992 0.931 1        10
+14 bix-8   bix-8-q7  0.992 0.932 1        10
+
+========== stage 2: correct | responded, gpt-5 grader ==========
+ Family: bernoulli 
+  Links: mu = logit 
+Formula: correct_gpt5 ~ 1 + (1 | capsule/question) 
+   Data: data (Number of observations: 130) 
+  Draws: 4 chains, each with iter = 4000; warmup = 1000; thin = 1;
+         total post-warmup draws = 12000
+
+Multilevel Hyperparameters:
+~capsule (Number of levels: 3) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     2.20      0.98     0.30     4.23 1.00     3845     2474
+
+~capsule:question (Number of levels: 14) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     3.18      0.78     1.86     4.90 1.00     6617     8391
+
+Regression Coefficients:
+          Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept    -0.76      1.13    -2.93     1.49 1.00     7214     7589
+
+Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).
+
+Typical-question rate (median [95% CI]):
+  50%  2.5% 97.5% 
+0.314 0.050 0.816 
+
+Per-question partially pooled rates:
+# A tibble: 14 × 6
+   capsule question   rate  lo95  hi95 n_obs
+   <chr>   <chr>     <dbl> <dbl> <dbl> <int>
+ 1 bix-26  bix-26-q3 0.966 0.67  1         6
+ 2 bix-26  bix-26-q4 0.717 0.354 0.943     7
+ 3 bix-26  bix-26-q5 0.023 0     0.23      9
+ 4 bix-49  bix-49-q1 0.003 0     0.119    10
+ 5 bix-49  bix-49-q2 0.003 0     0.116    10
+ 6 bix-49  bix-49-q3 0.003 0     0.121    10
+ 7 bix-49  bix-49-q4 0.003 0     0.124     9
+ 8 bix-49  bix-49-q5 0.004 0     0.13      9
+ 9 bix-8   bix-8-q1  0.982 0.805 1        10
+10 bix-8   bix-8-q2  0.903 0.638 0.993    10
+11 bix-8   bix-8-q3  0.905 0.641 0.992    10
+12 bix-8   bix-8-q5  0.982 0.809 1        10
+13 bix-8   bix-8-q6  0.027 0     0.221    10
+14 bix-8   bix-8-q7  0.111 0.01  0.386    10
+
+========== sensitivity: correct, gpt-4o grader ==========
+ Family: bernoulli 
+  Links: mu = logit 
+Formula: correct_gpt4o ~ 1 + (1 | capsule/question) 
+   Data: data (Number of observations: 130) 
+  Draws: 4 chains, each with iter = 4000; warmup = 1000; thin = 1;
+         total post-warmup draws = 12000
+
+Multilevel Hyperparameters:
+~capsule (Number of levels: 3) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     1.13      0.82     0.05     3.06 1.00     4050     4578
+
+~capsule:question (Number of levels: 14) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     3.59      0.74     2.31     5.24 1.00     6718     7921
+
+Regression Coefficients:
+          Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept    -0.71      0.99    -2.64     1.24 1.00     5114     7367
+
+Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).
+
+Typical-question rate (median [95% CI]):
+  50%  2.5% 97.5% 
+0.332 0.067 0.776 
+
+Per-question partially pooled rates:
+# A tibble: 14 × 6
+   capsule question   rate  lo95  hi95 n_obs
+   <chr>   <chr>     <dbl> <dbl> <dbl> <int>
+ 1 bix-26  bix-26-q3 0.974 0.7   1         6
+ 2 bix-26  bix-26-q4 0.714 0.341 0.945     7
+ 3 bix-26  bix-26-q5 0.014 0     0.2       9
+ 4 bix-49  bix-49-q1 0.01  0     0.161    10
+ 5 bix-49  bix-49-q2 0.01  0     0.157    10
+ 6 bix-49  bix-49-q3 0.009 0     0.166    10
+ 7 bix-49  bix-49-q4 0.01  0     0.183     9
+ 8 bix-49  bix-49-q5 0.974 0.753 1         9
+ 9 bix-8   bix-8-q1  0.981 0.796 1        10
+10 bix-8   bix-8-q2  0.9   0.629 0.992    10
+11 bix-8   bix-8-q3  0.9   0.639 0.992    10
+12 bix-8   bix-8-q5  0.013 0     0.183    10
+13 bix-8   bix-8-q6  0.094 0.007 0.362    10
+14 bix-8   bix-8-q7  0.094 0.006 0.36     10
+

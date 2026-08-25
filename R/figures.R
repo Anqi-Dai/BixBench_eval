@@ -2,10 +2,13 @@
 #
 # One figure per conclusion, titled with the conclusion itself
 # (assertion-evidence style), so each can stand alone in the writeup or a
-# LinkedIn post:
-#   fig1 — the outcome has three states; refusals/no-answers are not wrong answers
-#   fig2 — correctness is a property of the question, not run-to-run luck
-#   fig3 — the choice of grader flips whole questions, not scattered answers
+# LinkedIn post. Ordered so each figure licenses the next:
+#   fig1 — the choice of grader flips whole questions, not scattered answers
+#          (so "correct" is a measured quantity; gpt-5 is the primary grader
+#          everywhere downstream)
+#   fig2 — the outcome has three states; refusals/no-answers are not wrong answers
+#   fig3 — the incorrect and no-answer states, split by verified cause
+#   fig4 — correctness is a property of the question, not run-to-run luck
 #
 # Colors follow the dataviz reference palette (documented passing sets, light
 # mode): categorical slots 1-3 for capsule identity, status good/critical for
@@ -13,7 +16,7 @@
 # segment is also direct-labeled, so meaning never rides on color alone.
 #
 # Run after R/two_stage_model.R:  Rscript R/figures.R
-# Outputs: results/figures/fig{1,2,3}_*.png (300 dpi) and matching .pdf
+# Outputs: results/figures/fig{1,2,3,4}_*.png (300 dpi) and matching .pdf
 
 library(tidyverse)
 library(brms)
@@ -70,7 +73,7 @@ dir.create("results/figures", showWarnings = FALSE, recursive = TRUE)
 d <- read_csv("results/model_data.csv", show_col_types = FALSE)
 
 # Order questions within capsule; capsules ordered by overall difficulty
-# (bix-8 best -> bix-26 worst) so both figures read the same way.
+# (bix-8 best -> bix-26 worst) so all figures read the same way.
 capsule_order <- c("bix-8", "bix-49", "bix-26")
 d <- d |>
   mutate(
@@ -78,100 +81,16 @@ d <- d |>
     question = fct_reorder(question, as.integer(str_extract(question, "[0-9]+$")))
   )
 
-# ---- fig 1: three outcome states per question ------------------------------
+# ---- fig 1: disagreement follows generation, not family ---------------------
 
-# Collapse each run to one of three states under the primary (gpt-5) grader.
-# This is the figure that shows why the model is two-stage: the gray band is
-# what a binary score would silently count as "wrong".
-states <- d |>
-  mutate(state = case_when(
-    !responded    ~ "no answer",
-    correct_gpt5  ~ "correct",
-    TRUE          ~ "incorrect"
-  ) |> factor(levels = c("correct", "incorrect", "no answer"))) |>
-  count(capsule, question, state)
-
-fig1 <- states |>
-  ggplot(aes(n, fct_rev(question), fill = state)) +
-  # 2px surface gap between stacked segments, thin bars
-  geom_col(width = .62, color = PAL$surface, linewidth = .7) +
-  # direct label: count inside each segment (white ink on the status fills,
-  # so color never carries the meaning alone)
-  geom_text(aes(label = n), position = position_stack(vjust = .5),
-            color = "white", size = 3, fontface = "bold") +
-  facet_grid(capsule ~ ., scales = "free_y", space = "free_y") +
-  scale_fill_manual(values = c(correct = PAL$good, incorrect = PAL$critical,
-                               `no answer` = PAL$noanswer)) +
-  scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
-  labs(
-    title = "An agent run has three outcomes, not two",
-    subtitle = "10 replicate runs per question (claude-sonnet-4-5, temp 1.0); correctness by gpt-5 majority vote.\nBixBench scores every run correct/incorrect only, so it counts the gray no-answer runs as incorrect answers.",
-    x = "runs (of 10)", y = NULL,
-    caption = "BixBench: 3 capsules covering 14 questions, 10 replicate runs each = 140 runs."
-  ) +
-  theme_viz + theme(panel.grid.major.y = element_blank())
-save_fig(fig1, "fig1_three_states", 7.5, 4.8)
-
-# ---- fig 2: posterior per-question rates (bimodal correctness) -------------
-
-# Partially pooled posterior rates from the fitted models: median + 95%
-# interval per question, for both stages side by side.
-fits <- list(
-  "P(answered)"            = readRDS("results/fits/stage1_responded.rds"),
-  "P(correct | answered)"  = readRDS("results/fits/stage2_correct_gpt5.rds")
-)
-
-# posterior_epred on one row per question gives that question's own pooled
-# rate; summarize to median and 95% interval.
-post <- imap(fits, \(fit, label) {
-  nd <- distinct(as_tibble(fit$data), capsule, question)
-  ep <- posterior_epred(fit, newdata = nd)
-  nd |> mutate(
-    stage = label,
-    rate = apply(ep, 2, median),
-    lo = apply(ep, 2, quantile, .025),
-    hi = apply(ep, 2, quantile, .975)
-  )
-}) |>
-  list_rbind() |>
-  mutate(
-    capsule = factor(capsule, levels = capsule_order),
-    stage = factor(stage, levels = names(fits)),
-    question = fct_reorder(question, as.integer(str_extract(question, "[0-9]+$")))
-  )
-
-fig2 <- post |>
-  ggplot(aes(rate, fct_rev(question), color = capsule)) +
-  # 95% interval as a thin line, median as a >=8px point
-  geom_linerange(aes(xmin = lo, xmax = hi), linewidth = .7, alpha = .55) +
-  geom_point(size = 2.6) +
-  # strip labels rendered in the capsule's own color (ggtext markdown), so
-  # the dot colors need no separate legend
-  facet_grid(capsule ~ stage, scales = "free_y", space = "free_y",
-             labeller = labeller(capsule = \(x)
-               str_c("<span style='color:", PAL$capsule[x], "'>", x, "</span>"))) +
-  scale_color_manual(values = PAL$capsule) +
-  scale_x_continuous(limits = c(0, 1), breaks = c(0, .5, 1),
-                     labels = c("0", "0.5", "1")) +
-  labs(
-    title = "Given an answer, correctness is a property of the question, not luck",
-    subtitle = "Each dot is a question's estimated underlying success probability (posterior median, hierarchical model);\nthe band is 95% uncertainty about that probability — 10 runs cannot pin it exactly even when all 10 agree.",
-    x = "estimated probability", y = NULL,
-    caption = "Bernoulli GLMMs, question nested in capsule; gpt-5 majority-vote grading. Question-level SD (stage 2): 3.2 log-odds."
-  ) +
-  theme_viz + theme(panel.grid.major.y = element_blank(),
-                    legend.position = "none",
-                    panel.spacing.x = unit(1.2, "lines"),
-                    strip.text.y = element_markdown(face = "bold"))
-save_fig(fig2, "fig2_question_rates", 7.5, 4.8)
-
-# ---- fig 3: disagreement follows generation, not family ---------------------
-
-# Three graders: gpt-5 and claude-sonnet-4-5 are different families but the
-# same (current) generation; gpt-4o is gpt-5's own family, one generation
-# back. The point of the figure: the two current models give identical
-# majority verdicts on all 130 answers, while the older family-mate flips
-# whole questions — so grader choice is about generation, not vendor.
+# This comes first because every later figure rests on a correct/incorrect
+# judgment, and that judgment is itself a measurement with a chooseable
+# instrument. Three graders: gpt-5 and claude-sonnet-4-5 are different
+# families but the same (current) generation; gpt-4o is gpt-5's own family,
+# one generation back. The two current models give identical majority
+# verdicts on all 130 answers, while the older family-mate flips whole
+# questions — so grader choice is about generation, not vendor, and gpt-5
+# stands as the primary grader for figs 2-4.
 grader_rates <- d |>
   filter(responded) |>
   summarise(
@@ -198,7 +117,7 @@ flips <- grader_rates |>
 
 # Concentric sizes, largest drawn first: exact agreement (the common case)
 # shows as nested rings instead of one grader's dot hiding the others.
-# Dark2 (RColorBrewer) hues chosen to avoid fig2's blue/orange/aqua:
+# Dark2 (RColorBrewer) hues chosen to avoid fig4's blue/orange/aqua:
 # magenta outer ring, purple middle, mustard center — each ring pair differs
 # strongly in hue and lightness so the nesting stays readable
 GRADER_COL <- c(`gpt-4o (prev gen)` = "#E7298A",
@@ -209,7 +128,7 @@ GRADER_SIZE <- c(`gpt-4o (prev gen)` = 6.0,
                  `claude-sonnet-4-5` = 3.8,
                  `gpt-5`             = 1.6)
 
-fig3 <- grader_rates |>
+fig1 <- grader_rates |>
   ggplot(aes(rate, fct_rev(question))) +
   geom_line(aes(group = question), color = PAL$grid, linewidth = 1) +
   # open rings (shape 21, transparent fill) instead of solid dots: three
@@ -240,9 +159,202 @@ fig3 <- grader_rates |>
     title = "Grader disagreement follows model generation, not model family",
     subtitle = "Fraction of answered runs graded correct per question (majority of 10 grading replicates per grader).\ngpt-5 and claude-sonnet-4-5 — different families, current generation — agree on all 130 answers (nested dots);\ngpt-4o — BixBench's default grader, one generation behind its own family-mate — flips whole questions.",
     x = "fraction graded correct", y = NULL,
-    caption = "Same 130 answers under all three graders."
+    caption = "Same 130 answers under all three graders. gpt-5 is the primary grader for the remaining figures."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank())
-save_fig(fig3, "fig3_grader_flips", 7.5, 6.6)
+save_fig(fig1, "fig1_grader_flips", 7.5, 6.6)
+
+# ---- fig 2: three outcome states per question ------------------------------
+
+# Collapse each run to one of three states under the primary (gpt-5) grader.
+# This is the figure that shows why the model is two-stage: the gray band is
+# what a binary score would silently count as "wrong".
+states <- d |>
+  mutate(state = case_when(
+    !responded    ~ "no answer",
+    correct_gpt5  ~ "correct",
+    TRUE          ~ "incorrect"
+  ) |> factor(levels = c("correct", "incorrect", "no answer"))) |>
+  count(capsule, question, state)
+
+fig2 <- states |>
+  ggplot(aes(n, fct_rev(question), fill = state)) +
+  # 2px surface gap between stacked segments, thin bars
+  geom_col(width = .62, color = PAL$surface, linewidth = .7) +
+  # direct label: count inside each segment (white ink on the status fills,
+  # so color never carries the meaning alone)
+  geom_text(aes(label = n), position = position_stack(vjust = .5),
+            color = "white", size = 3, fontface = "bold") +
+  facet_grid(capsule ~ ., scales = "free_y", space = "free_y") +
+  scale_fill_manual(values = c(correct = PAL$good, incorrect = PAL$critical,
+                               `no answer` = PAL$noanswer)) +
+  scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
+  labs(
+    title = "An agent run has three outcomes, not two",
+    subtitle = "10 replicate runs per question (claude-sonnet-4-5, temp 1.0); correctness by gpt-5 majority vote.\nBixBench scores every run correct/incorrect only, so it counts the gray no-answer runs as incorrect answers.",
+    x = "runs (of 10)", y = NULL,
+    caption = "BixBench: 3 capsules covering 14 questions, 10 replicate runs each = 140 runs."
+  ) +
+  theme_viz + theme(panel.grid.major.y = element_blank())
+save_fig(fig2, "fig2_three_states", 7.5, 4.8)
+
+# ---- fig 3: the incorrect and no-answer states, split by verified cause ----
+
+# Same layout and colors as fig 2 — correct green, incorrect red, no-answer
+# gray — with attribution overlaid as hatching (ggpattern): diagonal stripes
+# where the defect sits in the benchmark (answer key, question wording, or
+# the harness's own install instruction), crosshatch where it sits in the
+# agent. Causes established in env/REVIEW_REPORT.md (every one verified by
+# recomputation; classification decisions dated 2026-08-24).
+#
+# Per-trajectory assignment, from the report's review table:
+#   - all incorrect bix-49 runs and bix-8-q6/q7 -> answer-key error (hidden
+#     sex covariate; transcript/gene conflation)
+#   - bix-8-q3 rep 2 -> answer-key error (gene-level answer vs row-level key)
+#   - bix-26-q5 reps 0/2/4 (answered 1, the stated-thresholds answer) ->
+#     answer-key error (the key skips its own padj filter)
+#   - bix-8-q2 rep 0 (2x2) and bix-26-q5 reps 5/9 (GSEA; hand-rolled
+#     pathway-LFC) -> ambiguous question
+#   - bix-26-q5 reps 1/6/7/8 (the 58s) and bix-26-q4 reps 0/5 -> agent error
+#   - no-answer runs: bix-26-q4 rep 9 hit the 40-action ceiling (budget);
+#     the other nine died in the harness's own Bioconductor install trap
+# bix-8-q5 (the print-floor key) does not appear: gpt-5 grades those runs
+# correct, so that benchmark defect is absorbed by the grader, not visible
+# in this figure.
+library(ggpattern)
+
+# Mechanism per trajectory first (kept at full detail for auditability),
+# then collapsed for display into state (fig 2's colors) x attribution
+# (the hatching).
+causes <- d |>
+  mutate(
+    cause = case_when(
+      responded & correct_gpt5 ~ "correct",
+      # no-answer runs, by mechanism
+      !responded & question == "bix-26-q4" & replica == 9 ~ "budget exhausted",
+      !responded ~ "harness install trap",
+      # answered-incorrect runs, by verified mechanism
+      question == "bix-8-q2"  ~ "ambiguous question",
+      question == "bix-26-q5" & replica %in% c(5, 9) ~ "ambiguous question",
+      question == "bix-26-q5" & replica %in% c(1, 6, 7, 8) ~ "agent error",
+      question == "bix-26-q4" ~ "agent error",
+      TRUE ~ "answer-key error"
+    ),
+    state = case_when(
+      cause == "correct" ~ "correct",
+      cause %in% c("harness install trap", "budget exhausted") ~ "no answer",
+      TRUE ~ "incorrect"
+    ) |> factor(levels = c("correct", "incorrect", "no answer")),
+    side = case_when(
+      cause == "correct" ~ "correct",
+      cause %in% c("answer-key error", "ambiguous question",
+                   "harness install trap") ~ "benchmark defect",
+      TRUE ~ "agent defect"
+    ) |> factor(levels = c("correct", "benchmark defect", "agent defect")),
+    # explicit stacking order so same-state segments stay adjacent:
+    # left-to-right renders as the reverse of these levels — gray no-answer
+    # pair leftmost, red incorrect pair next, correct green rightmost (the
+    # same left-to-right reading as fig 2)
+    combo = factor(
+      str_c(state, " / ", side),
+      levels = c("correct / correct",
+                 "incorrect / benchmark defect", "incorrect / agent defect",
+                 "no answer / benchmark defect", "no answer / agent defect")
+    )
+  ) |>
+  count(capsule, question, state, side, combo)
+
+fig3 <- causes |>
+  ggplot(aes(n, fct_rev(question))) +
+  # fill = fig 2's state colors; pattern = who owns the defect. Stripes and
+  # crosshatch are drawn as translucent dark lines so the state color stays
+  # dominant and the two hatchings differ by geometry, not color.
+  geom_col_pattern(
+    aes(fill = state, pattern = side, group = combo),
+    width = .62, color = PAL$surface, linewidth = .7,
+    pattern_fill = NA, pattern_colour = "black", pattern_alpha = .35,
+    pattern_density = .05, pattern_spacing = .03,
+    pattern_key_scale_factor = .45
+  ) +
+  geom_text(aes(label = n, group = combo),
+            position = position_stack(vjust = .5),
+            color = "white", size = 3, fontface = "bold") +
+  facet_grid(capsule ~ ., scales = "free_y", space = "free_y") +
+  scale_fill_manual(values = c(correct = PAL$good, incorrect = PAL$critical,
+                               `no answer` = PAL$noanswer)) +
+  # legend shows only the two defect hatchings (correct needs no attribution)
+  scale_pattern_manual(values = c(correct = "none",
+                                  `benchmark defect` = "stripe",
+                                  `agent defect` = "crosshatch"),
+                       breaks = c("benchmark defect", "agent defect")) +
+  # both legends: fill keys plain, pattern keys drawn on a neutral light chip
+  # so the dark hatching itself is what the key shows
+  guides(
+    fill = guide_legend(order = 1, override.aes = list(pattern = "none")),
+    pattern = guide_legend(order = 2, override.aes = list(fill = "#d8d6cf"))
+  ) +
+  scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
+  labs(
+    title = "Scored failures: striped = benchmark's defect, crosshatched = agent's",
+    subtitle = "Fig 2's states, with every non-correct run attributed by re-deriving both the answer key and the agent's answer\nfrom the raw capsule data (env/REVIEW_REPORT.md). Of 80 answered-incorrect runs, 74 trace to the key or the\nquestion, 6 to the agent; of 10 no-answer runs, 9 follow the harness's own broken install instruction.",
+    x = "runs (of 10)", y = NULL,
+    caption = "gpt-5 majority-vote grading. bix-8-q5's print-floor key is absent only because gpt-5 grades p = 8.1e-194 as satisfying \"p < 2.2e-16\"."
+  ) +
+  theme_viz + theme(panel.grid.major.y = element_blank(),
+                    legend.text = element_text(size = 8.5))
+save_fig(fig3, "fig3_failure_causes", 7.5, 5.1)
+
+# ---- fig 4: posterior per-question rates (bimodal correctness) -------------
+
+# Partially pooled posterior rates from the fitted models: median + 95%
+# interval per question, for both stages side by side.
+fits <- list(
+  "P(answered)"            = readRDS("results/fits/stage1_responded.rds"),
+  "P(correct | answered)"  = readRDS("results/fits/stage2_correct_gpt5.rds")
+)
+
+# posterior_epred on one row per question gives that question's own pooled
+# rate; summarize to median and 95% interval.
+post <- imap(fits, \(fit, label) {
+  nd <- distinct(as_tibble(fit$data), capsule, question)
+  ep <- posterior_epred(fit, newdata = nd)
+  nd |> mutate(
+    stage = label,
+    rate = apply(ep, 2, median),
+    lo = apply(ep, 2, quantile, .025),
+    hi = apply(ep, 2, quantile, .975)
+  )
+}) |>
+  list_rbind() |>
+  mutate(
+    capsule = factor(capsule, levels = capsule_order),
+    stage = factor(stage, levels = names(fits)),
+    question = fct_reorder(question, as.integer(str_extract(question, "[0-9]+$")))
+  )
+
+fig4 <- post |>
+  ggplot(aes(rate, fct_rev(question), color = capsule)) +
+  # 95% interval as a thin line, median as a >=8px point
+  geom_linerange(aes(xmin = lo, xmax = hi), linewidth = .7, alpha = .55) +
+  geom_point(size = 2.6) +
+  # strip labels rendered in the capsule's own color (ggtext markdown), so
+  # the dot colors need no separate legend
+  facet_grid(capsule ~ stage, scales = "free_y", space = "free_y",
+             labeller = labeller(capsule = \(x)
+               str_c("<span style='color:", PAL$capsule[x], "'>", x, "</span>"))) +
+  scale_color_manual(values = PAL$capsule) +
+  scale_x_continuous(limits = c(0, 1), breaks = c(0, .5, 1),
+                     labels = c("0", "0.5", "1")) +
+  labs(
+    title = "Given an answer, correctness is a property of the question, not luck",
+    subtitle = "Each dot is a question's estimated underlying success probability (posterior median, hierarchical model);\nthe band is 95% uncertainty about that probability — 10 runs cannot pin it exactly even when all 10 agree.",
+    x = "estimated probability", y = NULL,
+    caption = "Bernoulli GLMMs, question nested in capsule; gpt-5 majority-vote grading. Question-level SD (stage 2): 3.2 log-odds."
+  ) +
+  theme_viz + theme(panel.grid.major.y = element_blank(),
+                    legend.position = "none",
+                    panel.spacing.x = unit(1.2, "lines"),
+                    strip.text.y = element_markdown(face = "bold"))
+save_fig(fig4, "fig4_question_rates", 7.5, 4.8)
 
 message("Wrote figures to results/figures/")

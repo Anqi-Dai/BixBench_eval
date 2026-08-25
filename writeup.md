@@ -43,8 +43,7 @@ the budget under control — through a deliberate selection process: survey all
 rejection, is [in the repo](env/CAPSULE_SELECTION.md)). The three come from
 three different source papers, so they are independent of each other. Together
 they carry 14 questions, and every answer is a number — a count, a ratio, a
-p-value. That matters later: it means I can measure whether the agent agrees
-with itself by comparing numbers directly, with no grader in the loop.
+p-value.
 
 I ran each question 10 times at temperature 1.0 — the benchmark's own settings
 — for 140 runs total.
@@ -56,9 +55,10 @@ I ran each question 10 times at temperature 1.0 — the benchmark's own settings
 | `bix-26` | 3 | 30 | 22 |
 
 Grading was its own replicated experiment. The paper names Claude 3.5 Sonnet
-as its judge, but that model (`claude-3-5-sonnet-20241022`) is retired. So I
-graded with the current Claude (`claude-sonnet-4-5-20250929`) — and, to keep
-the OpenAI side comparable, with a GPT model from the same era
+as its judge, but that model (`claude-3-5-sonnet-20241022`) was retired in
+October 2025, so it can no longer be called. I graded with a newer model from
+the same Sonnet line (`claude-sonnet-4-5-20250929`) — and, to keep the OpenAI
+side comparable, with a GPT model from around the same time
 (`gpt-5-2025-08-07`), alongside the default the code actually ships
 (`gpt-4o-2024-11-20`). Each grader scored every answer 10 times, so grader
 noise is measured rather than assumed: 130 answers × 3 graders × 10 rounds =
@@ -100,7 +100,8 @@ partial pooling buys; bridge to the taxonomy.)*
 ## Limitations and what I'd do next
 
 *(to write — small N stated plainly; one agent configuration; graders are
-themselves LLMs; next steps.)*
+themselves LLMs, and the Claude grader is the same model that produced the
+answers, mirroring the benchmark's own agentic self-grading path; next steps.)*
 
 ## References
 

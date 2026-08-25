@@ -200,12 +200,14 @@ save_fig(fig2, "fig2_three_states", 7.5, 4.8)
 
 # ---- fig 3: the incorrect and no-answer states, split by verified cause ----
 
-# Same layout and colors as fig 2 — correct green, incorrect red, no-answer
-# gray — with attribution overlaid as hatching (ggpattern): diagonal stripes
-# where the defect sits in the benchmark (answer key, question wording, or
-# the harness's own install instruction), crosshatch where it sits in the
-# agent. Causes established in env/REVIEW_REPORT.md (every one verified by
-# recomputation; classification decisions dated 2026-08-24).
+# Fig 2's three states and colors, unchanged, with exactly one addition:
+# white dots mark the segments whose defect sits in the agent. Everything
+# unmarked among the red/gray segments is the benchmark's (answer key,
+# question wording, or the harness's own install instruction) — so the
+# near-absence of dots is itself the finding. Causes established in
+# env/REVIEW_REPORT.md (every one verified by recomputation; classification
+# decisions dated 2026-08-24); the mechanism-level detail lives in the
+# report's review table, not in this figure.
 #
 # Per-trajectory assignment, from the report's review table:
 #   - all incorrect bix-49 runs and bix-8-q6/q7 -> answer-key error (hidden
@@ -223,9 +225,13 @@ save_fig(fig2, "fig2_three_states", 7.5, 4.8)
 # in this figure.
 library(ggpattern)
 
-# Mechanism per trajectory first (kept at full detail for auditability),
-# then collapsed for display into state (fig 2's colors) x attribution
-# (the hatching).
+# Attribution per trajectory. The mechanism-level case_when is kept intact
+# for auditability against the review table, then collapsed to the only
+# distinction the figure draws: benchmark's defect vs agent's defect.
+# The state/side factor levels double as stacking order — left-to-right
+# renders as the reverse, so gray no-answer segments sit leftmost, red
+# incorrect segments next, correct green rightmost (fig 2's reading order),
+# with the agent-owned part of each state adjacent to its benchmark part.
 causes <- d |>
   mutate(
     cause = case_when(
@@ -245,58 +251,47 @@ causes <- d |>
       cause %in% c("harness install trap", "budget exhausted") ~ "no answer",
       TRUE ~ "incorrect"
     ) |> factor(levels = c("correct", "incorrect", "no answer")),
-    side = case_when(
-      cause == "correct" ~ "correct",
-      cause %in% c("answer-key error", "ambiguous question",
-                   "harness install trap") ~ "benchmark defect",
-      TRUE ~ "agent defect"
-    ) |> factor(levels = c("correct", "benchmark defect", "agent defect")),
-    # explicit stacking order so same-state segments stay adjacent:
-    # left-to-right renders as the reverse of these levels — gray no-answer
-    # pair leftmost, red incorrect pair next, correct green rightmost (the
-    # same left-to-right reading as fig 2)
+    side = if_else(cause %in% c("agent error", "budget exhausted"),
+                   "agent's defect", "benchmark's / none"),
     combo = factor(
       str_c(state, " / ", side),
-      levels = c("correct / correct",
-                 "incorrect / benchmark defect", "incorrect / agent defect",
-                 "no answer / benchmark defect", "no answer / agent defect")
+      levels = c("correct / benchmark's / none",
+                 "incorrect / benchmark's / none", "incorrect / agent's defect",
+                 "no answer / benchmark's / none", "no answer / agent's defect")
     )
   ) |>
   count(capsule, question, state, side, combo)
 
 fig3 <- causes |>
   ggplot(aes(n, fct_rev(question))) +
-  # fill = fig 2's state colors; pattern = who owns the defect. Stripes and
-  # crosshatch are drawn as translucent dark lines so the state color stays
-  # dominant and the two hatchings differ by geometry, not color.
+  # fill = fig 2's three state colors, untouched. The single addition: thin
+  # slanted white lines on the segments whose defect is the agent's; all
+  # unmarked red/gray segments are the benchmark's, which the title states.
   geom_col_pattern(
     aes(fill = state, pattern = side, group = combo),
     width = .62, color = PAL$surface, linewidth = .7,
-    pattern_fill = NA, pattern_colour = "black", pattern_alpha = .35,
-    pattern_density = .05, pattern_spacing = .03,
-    pattern_key_scale_factor = .45
+    pattern_fill = NA, pattern_colour = "white", pattern_alpha = .8,
+    pattern_angle = 45, pattern_density = .001, pattern_spacing = .05,
+    pattern_size = .25, pattern_key_scale_factor = .45
   ) +
   geom_text(aes(label = n, group = combo),
             position = position_stack(vjust = .5),
-            color = "white", size = 3, fontface = "bold") +
+            color = "black", size = 3, fontface = "bold") +
   facet_grid(capsule ~ ., scales = "free_y", space = "free_y") +
   scale_fill_manual(values = c(correct = PAL$good, incorrect = PAL$critical,
-                               `no answer` = PAL$noanswer)) +
-  # legend shows only the two defect hatchings (correct needs no attribution)
-  scale_pattern_manual(values = c(correct = "none",
-                                  `benchmark defect` = "stripe",
-                                  `agent defect` = "crosshatch"),
-                       breaks = c("benchmark defect", "agent defect")) +
-  # both legends: fill keys plain, pattern keys drawn on a neutral light chip
-  # so the dark hatching itself is what the key shows
-  guides(
-    fill = guide_legend(order = 1, override.aes = list(pattern = "none")),
-    pattern = guide_legend(order = 2, override.aes = list(fill = "#d8d6cf"))
-  ) +
+                               `no answer` = PAL$noanswer),
+                    guide = guide_legend(order = 1,
+                                         override.aes = list(pattern = "none"))) +
+  # one pattern key: the hatched agent mark, shown on a neutral mid chip
+  scale_pattern_manual(values = c(`benchmark's / none` = "none",
+                                  `agent's defect` = "stripe"),
+                       breaks = "agent's defect") +
+  guides(pattern = guide_legend(order = 2,
+                                override.aes = list(fill = "#8a8880"))) +
   scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
   labs(
-    title = "Scored failures: striped = benchmark's defect, crosshatched = agent's",
-    subtitle = "Fig 2's states, with every non-correct run attributed by re-deriving both the answer key and the agent's answer\nfrom the raw capsule data (env/REVIEW_REPORT.md). Of 80 answered-incorrect runs, 74 trace to the key or the\nquestion, 6 to the agent; of 10 no-answer runs, 9 follow the harness's own broken install instruction.",
+    title = "Most scored failures are fixable benchmark-side; hatching marks the agent's share",
+    subtitle = "Fig 2's states, with every non-correct run attributed by re-deriving both the answer key and the agent's\nanswer from the raw capsule data (env/REVIEW_REPORT.md). Unmarked red and gray segments trace to the\nbenchmark (answer key, question wording, or the harness's own install instruction): 74 of 80 incorrect runs\nand 9 of 10 no-answer runs. The hatched segments — 6 incorrect, 1 no-answer — are the agent's.",
     x = "runs (of 10)", y = NULL,
     caption = "gpt-5 majority-vote grading. bix-8-q5's print-floor key is absent only because gpt-5 grades p = 8.1e-194 as satisfying \"p < 2.2e-16\"."
   ) +

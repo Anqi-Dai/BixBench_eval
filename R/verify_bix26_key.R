@@ -8,10 +8,16 @@
 #
 # Against KEGG as of 2026-08-23 this reproduces the q3 key (11) and the q4 key
 # (5) exactly, which validates the pipeline reading. q5 then gives 1 — the
-# agent's modal answer — not the key's 3. The 3 only appears when "significant
-# enrichment" is read as raw p < 0.05, although the question itself defines
-# significance with an adjusted p-value. Either the key used raw p, or it used
-# an older KEGG; the stated definition yields 1 today.
+# agent's modal answer — not the key's 3.
+#
+# The key's 3 is explained by the author's own notebook (on the Hugging Face
+# hub inside the capsule zip; the harness strips it from what the agent sees):
+# the author filters DEGs by fold change only — the padj < 0.05 threshold the
+# question states is never applied — runs enrichment separately for up- and
+# downregulated genes, and never computes the set difference in code (the
+# notebook ends at a dotplot, so the key was read off the plot). The second
+# block below reruns that exact pipeline; it reproduces all three keys today,
+# so KEGG drift is not in play for this capsule.
 #
 # Run inside the BixBench image (needs network access for KEGG):
 #   docker run --rm \
@@ -56,8 +62,23 @@ dn_common <- intersect(kegg(pick(fe, "down"))$ID[kegg(pick(fe, "down"))$p.adjust
 cat("q4 (key 5): common down-pathways =", length(dn_common), "\n")
 
 # q5 — enriched under iron depletion but not innate media, under the stated
-# adjusted-p definition and under the raw-p reading that reproduces the key.
+# adjusted-p definition. This is the answer the question's own text implies.
 adj <- setdiff(e_fe$ID[e_fe$p.adjust < 0.05], e_succ$ID[e_succ$p.adjust < 0.05])
-raw <- setdiff(e_fe$ID[e_fe$pvalue  < 0.05], e_succ$ID[e_succ$pvalue  < 0.05])
-cat("q5 (key 3): padj<0.05 reading =", length(adj), "->", adj, "\n")
-cat("            raw p<0.05 reading =", length(raw), "->", raw, "\n")
+cat("q5 (key 3): stated-thresholds reading =", length(adj), "->", adj, "\n\n")
+
+# --- The author's actual pipeline, transcribed from the capsule notebook ---
+# Gene filter is fold change only (no padj), enrichment runs per direction
+# with qvalueCutoff = 0.05, and per-condition pathway sets are the union of
+# the up and down results. Reproduces all three keys, including q5 = 3.
+k_auth <- function(genes) {
+  as.data.frame(enrichKEGG(gene = genes, organism = "pau",
+                           pvalueCutoff = 0.05, qvalueCutoff = 0.05))
+}
+fe_up <- k_auth(rownames(fe)[fe$log2FoldChange >  1.5])
+fe_dn <- k_auth(rownames(fe)[fe$log2FoldChange < -1.5])
+su_up <- k_auth(rownames(succ)[succ$log2FoldChange >  1.5])
+su_dn <- k_auth(rownames(succ)[succ$log2FoldChange < -1.5])
+abc_a <- fe_up[grepl("ABC transporters", fe_up$Description), ]
+cat("author pipeline  q3:", abc_a$Count,
+    "| q4:", length(intersect(fe_dn$ID, su_dn$ID)),
+    "| q5:", length(setdiff(union(fe_up$ID, fe_dn$ID), union(su_up$ID, su_dn$ID))), "\n")

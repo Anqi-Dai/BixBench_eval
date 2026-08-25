@@ -136,8 +136,18 @@ Caveats already encoded in the figures/model, to carry into the writeup:
   sensitivity, and the two current models agree 130/130.
 
 **Phase 4 — writing up the taxonomy.** The analysis is done; only prose remains.
-Still open: read two expert notebooks in full, and compare the 10 notebooks for a
-single question to see whether the agent fails the same way each time.
+The two open classification calls were resolved by domain review on 2026-08-24
+(bix-8-q2's 2×2 stays question ambiguity; bix-26-q5's 58-answer replicates are
+plain agent error, no wording excuse), so the taxonomy in `env/REVIEW_REPORT.md`
+is final. The two remaining reading items are also done (2026-08-24, performed
+by Claude with computational verification rather than by eye): the expert
+notebooks for all three campaign capsules were read and every answer-key
+derivation confirmed by recomputation, and the 10 notebooks for `bix-26-q5`
+were compared — the agent does **not** fail the same way each time; the ten
+replicates split across four distinct analytical routes (canonical ORA → 1;
+gene-tables-misread-as-pathways → 58; GSEA/NES → 12; a hand-rolled ORA with an
+invented pathway-level fold change → 2) plus one Bioconductor death. Route
+table in `env/REVIEW_REPORT.md`.
 
 **Phase 5 — the writeup.** 1,200–1,800 words, finding first. Then Zenodo DOI, then
 make the repo public.

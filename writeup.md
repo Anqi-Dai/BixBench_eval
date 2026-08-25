@@ -35,8 +35,44 @@ variance say?
 
 ## What I ran
 
-*(to write — 3 capsules × 10 replicates, numeric ground truths, grading as a
-separately replicated step with three graders; the one design table.)*
+A BixBench capsule is a folder of real data from one published study, plus a
+few open-ended questions an analyst should be able to answer from that data. I
+picked three capsules — enough to see variation between capsules while keeping
+the budget under control — through a deliberate selection process: survey all
+54, pilot seven, keep three (the full workflow, with reasons for every
+rejection, is [in the repo](env/CAPSULE_SELECTION.md)). The three come from
+three different source papers, so they are independent of each other. Together
+they carry 14 questions, and every answer is a number — a count, a ratio, a
+p-value. That matters later: it means I can measure whether the agent agrees
+with itself by comparing numbers directly, with no grader in the loop.
+
+I ran each question 10 times at temperature 1.0 — the benchmark's own settings
+— for 140 runs total.
+
+| Capsule | Questions | Runs | Answered |
+|---|---:|---:|---:|
+| `bix-8` | 6 | 60 | 60 |
+| `bix-49` | 5 | 50 | 48 |
+| `bix-26` | 3 | 30 | 22 |
+
+Grading was its own replicated experiment. The paper names Claude 3.5 Sonnet
+as its judge, but that model (`claude-3-5-sonnet-20241022`) is retired. So I
+graded with the current Claude (`claude-sonnet-4-5-20250929`) — and, to keep
+the OpenAI side comparable, with a GPT model from the same era
+(`gpt-5-2025-08-07`), alongside the default the code actually ships
+(`gpt-4o-2024-11-20`). Each grader scored every answer 10 times, so grader
+noise is measured rather than assumed: 130 answers × 3 graders × 10 rounds =
+3,900 verdicts.
+
+```mermaid
+flowchart LR
+  A["3 capsules<br/>14 questions<br/>every answer numeric"] -->|"x10 replicates<br/>temperature 1.0"| B["140 agent runs"]
+  B --> C["130 answers"]
+  B --> D["10 no-answer runs<br/>kept, not discarded"]
+  C -->|"x10 rounds"| E["gpt-4o-2024-11-20<br/>shipped default"]
+  C -->|"x10 rounds"| F["claude-sonnet-4-5<br/>successor to the paper's judge"]
+  C -->|"x10 rounds"| G["gpt-5<br/>same-era GPT"]
+```
 
 ## The grader is part of the instrument
 

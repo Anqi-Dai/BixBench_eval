@@ -60,9 +60,10 @@ October 2025, so it can no longer be called. I graded with a newer model from
 the same Sonnet line (`claude-sonnet-4-5-20250929`) — and, to keep the OpenAI
 side comparable, with a GPT model from around the same time
 (`gpt-5-2025-08-07`), alongside the default the code actually ships
-(`gpt-4o-2024-11-20`). Each grader scored every answer 10 times, so grader
-noise is measured rather than assumed: 130 answers × 3 graders × 10 rounds =
-3,900 verdicts.
+(`gpt-4o-2024-11-20`). Each grader scored every answer 10 times — so grader
+noise is measured rather than assumed — and the majority of those 10 verdicts
+decides: an answer counts as correct under a grader only when most of its 10
+calls say so. That way one flaky grading call can't flip a result.
 
 ```mermaid
 flowchart LR
@@ -82,10 +83,10 @@ is about what you'd expect: grader disagreement follows model generation, not
 model family. gpt-5 and claude-sonnet-4-5 — different families, same
 generation — hand down the same majority verdict on all 130 answers (the
 nested rings in Figure 1). gpt-4o — BixBench's default grader, one generation
-behind its own family-mate — contradicts itself (has split votes) on 14.6% of
-identical answers when asked to regrade, and its majority verdicts had
-systematic disagreements with the two current graders on two whole questions
-(the labeled rows in Figure 1).
+behind its own family-mate — contradicts itself on 14.6% of answers: shown the
+same answer ten times, its ten verdicts come back mixed. And its majority
+verdicts disagree systematically with the two current graders on two whole
+questions (the labeled rows in Figure 1).
 
 Not a surprising result, but a consequential one: every number downstream
 depends on which grader reads the answers. I use gpt-5 for the rest of this

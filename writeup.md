@@ -92,8 +92,6 @@ Not a surprising result, but a consequential one: every number downstream
 depends on which grader reads the answers. I use gpt-5 for the rest of this
 writeup.
 
-![Figure 1](results/figures/fig1_grader_flips.png)
-
 ## An agent run has three outcomes, not two
 
 *(to write — fig 2: the no-answer runs, the harness's own install idiom, and

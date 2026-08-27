@@ -154,11 +154,11 @@ fig1 <- grader_rates |>
   guides(color = guide_legend(override.aes = list(size = 3, stroke = 1.8)),
          size = "none") +
   scale_x_continuous(limits = c(-.06, 1.06), breaks = c(0, .5, 1),
-                     labels = c("0", "0.5", "1")) +
+                     labels = c("0%", "50%", "100%")) +
   labs(
     title = "Grader disagreement follows model generation, not model family",
-    subtitle = "Fraction of answered runs graded correct per question (majority of 10 grading replicates per grader).\ngpt-5 and claude-sonnet-4-5 — different families, current generation — agree on all 130 answers (nested dots);\ngpt-4o — BixBench's default grader, one generation behind its own family-mate — flips whole questions.",
-    x = "fraction graded correct", y = NULL,
+    subtitle = "Share of answered runs graded correct per question (majority of 10 grading replicates per grader).\ngpt-5 and claude-sonnet-4-5 — different families, current generation — agree on all 130 answers (nested dots);\ngpt-4o — BixBench's default grader, one generation behind its own family-mate — flips whole questions.",
+    x = "runs graded correct", y = NULL,
     caption = "Same 130 answers under all three graders. gpt-5 is the primary grader for the remaining figures."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank())

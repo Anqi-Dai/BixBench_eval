@@ -76,9 +76,22 @@ flowchart LR
 
 ## The grader is part of the instrument
 
-*(to write — fig 1: gpt-4o self-contradicts on 14.6% of identical answers and
-flips two whole questions; the two current-generation models agree 130/130
-across families. Generation, not vendor; the remedy is one config line.)*
+Before trusting any correct/incorrect label, I checked the graders themselves
+— how reliable each one is, and whether they agree with each other. The result
+is about what you'd expect: grader disagreement follows model generation, not
+model family. gpt-5 and claude-sonnet-4-5 — different families, same
+generation — hand down the same majority verdict on all 130 answers (the
+nested rings in Figure 1). gpt-4o — BixBench's default grader, one generation
+behind its own family-mate — contradicts itself (has split votes) on 14.6% of
+identical answers when asked to regrade, and its majority verdicts had
+systematic disagreements with the two current graders on two whole questions
+(the labeled rows in Figure 1).
+
+Not a surprising result, but a consequential one: every number downstream
+depends on which grader reads the answers. I use gpt-5 for the rest of this
+writeup.
+
+![Figure 1](results/figures/fig1_grader_flips.png)
 
 ## An agent run has three outcomes, not two
 
@@ -101,7 +114,9 @@ partial pooling buys; bridge to the taxonomy.)*
 
 *(to write — small N stated plainly; one agent configuration; graders are
 themselves LLMs, and the Claude grader is the same model that produced the
-answers, mirroring the benchmark's own agentic self-grading path; next steps.)*
+answers, mirroring the benchmark's own agentic self-grading path; the remedy
+for the benchmark's grader noise is a one-line grader-config change; next
+steps.)*
 
 ## References
 

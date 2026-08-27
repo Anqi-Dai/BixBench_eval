@@ -167,27 +167,56 @@ save_fig(fig1, "fig1_grader_flips", 7.5, 6.6)
 # ---- fig 2: three outcome states per question ------------------------------
 
 # Collapse each run to one of three states under the primary (gpt-5) grader.
-# This is the figure that shows why the model is two-stage: the gray band is
-# what a binary score would silently count as "wrong".
+# The gray band is what a binary score silently counts as "wrong". One
+# addition, matching the section text's 9-vs-1 attribution: the single
+# no-answer run that is the agent's own doing (bix-26-q4 replica 9 ran out
+# of its 40-step budget) is hatched; the other nine gray runs died in the
+# harness's own Bioconductor install trap (env/REVIEW_REPORT.md).
+library(ggpattern)
+
 states <- d |>
-  mutate(state = case_when(
-    !responded    ~ "no answer",
-    correct_gpt5  ~ "correct",
-    TRUE          ~ "incorrect"
-  ) |> factor(levels = c("correct", "incorrect", "no answer"))) |>
-  count(capsule, question, state)
+  mutate(
+    state = case_when(
+      !responded    ~ "no answer",
+      correct_gpt5  ~ "correct",
+      TRUE          ~ "incorrect"
+    ) |> factor(levels = c("correct", "incorrect", "no answer")),
+    side = if_else(!responded & question == "bix-26-q4" & replica == 9,
+                   "agent", "none"),
+    combo = factor(
+      str_c(state, "/", side),
+      levels = c("correct/none", "incorrect/none",
+                 "no answer/none", "no answer/agent")
+    )
+  ) |>
+  count(capsule, question, state, side, combo)
 
 fig2 <- states |>
-  ggplot(aes(n, fct_rev(question), fill = state)) +
-  # 2px surface gap between stacked segments, thin bars
-  geom_col(width = .62, color = PAL$surface, linewidth = .7) +
-  # direct label: count inside each segment (white ink on the status fills,
-  # so color never carries the meaning alone)
-  geom_text(aes(label = n), position = position_stack(vjust = .5),
-            color = "white", size = 3, fontface = "bold") +
+  ggplot(aes(n, fct_rev(question))) +
+  # 2px surface gap between stacked segments; the hatch appears on exactly
+  # one segment, so the legend entry has to say what it means concretely
+  geom_col_pattern(
+    aes(fill = state, pattern = side, group = combo),
+    width = .62, color = PAL$surface, linewidth = .7,
+    pattern_fill = NA, pattern_colour = "white", pattern_alpha = .8,
+    pattern_angle = 45, pattern_density = .001, pattern_spacing = .05,
+    pattern_size = .25, pattern_key_scale_factor = .45
+  ) +
+  # direct label: count inside each segment, so color never carries the
+  # meaning alone
+  geom_text(aes(label = n, group = combo),
+            position = position_stack(vjust = .5),
+            color = "black", size = 3, fontface = "bold") +
   facet_grid(capsule ~ ., scales = "free_y", space = "free_y") +
   scale_fill_manual(values = c(correct = PAL$good, incorrect = PAL$critical,
-                               `no answer` = PAL$noanswer)) +
+                               `no answer` = PAL$noanswer),
+                    guide = guide_legend(order = 1,
+                                         override.aes = list(pattern = "none"))) +
+  scale_pattern_manual(values = c(none = "none", agent = "stripe"),
+                       breaks = "agent",
+                       labels = c(agent = "ran out of steps (agent's own)")) +
+  guides(pattern = guide_legend(order = 2,
+                                override.aes = list(fill = PAL$noanswer))) +
   scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
   labs(
     title = "An agent run has three outcomes, not two",
@@ -195,19 +224,18 @@ fig2 <- states |>
     x = "runs (of 10)", y = NULL,
     caption = "BixBench: 3 capsules covering 14 questions, 10 replicate runs each = 140 runs."
   ) +
-  theme_viz + theme(panel.grid.major.y = element_blank())
+  theme_viz + theme(panel.grid.major.y = element_blank(),
+                    legend.text = element_text(size = 8.5))
 save_fig(fig2, "fig2_three_states", 7.5, 4.8)
 
-# ---- fig 3: the incorrect and no-answer states, split by verified cause ----
+# ---- fig 3: the incorrect runs, split by verified cause --------------------
 
-# Fig 2's three states and colors, unchanged, with exactly one addition:
-# white dots mark the segments whose defect sits in the agent. Everything
-# unmarked among the red/gray segments is the benchmark's (answer key,
-# question wording, or the harness's own install instruction) — so the
-# near-absence of dots is itself the finding. Causes established in
-# env/REVIEW_REPORT.md (every one verified by recomputation; classification
-# decisions dated 2026-08-24); the mechanism-level detail lives in the
-# report's review table, not in this figure.
+# Only fig 2's red state, attributed. Every incorrect run was re-derived —
+# both the answer key and the agent's answer — from the raw capsule data
+# (env/REVIEW_REPORT.md; every cause verified by recomputation,
+# classification decisions dated 2026-08-24). Unhatched red is the
+# benchmark's (answer key or question wording); hatched red is the agent's
+# own. The no-answer runs' attribution lives in fig 2 and the section text.
 #
 # Per-trajectory assignment, from the report's review table:
 #   - all incorrect bix-49 runs and bix-8-q6/q7 -> answer-key error (hidden
@@ -218,86 +246,72 @@ save_fig(fig2, "fig2_three_states", 7.5, 4.8)
 #   - bix-8-q2 rep 0 (2x2) and bix-26-q5 reps 5/9 (GSEA; hand-rolled
 #     pathway-LFC) -> ambiguous question
 #   - bix-26-q5 reps 1/6/7/8 (the 58s) and bix-26-q4 reps 0/5 -> agent error
-#   - no-answer runs: bix-26-q4 rep 9 hit the 40-action ceiling (budget);
-#     the other nine died in the harness's own Bioconductor install trap
 # bix-8-q5 (the print-floor key) does not appear: gpt-5 grades those runs
 # correct, so that benchmark defect is absorbed by the grader, not visible
 # in this figure.
-library(ggpattern)
 
-# Attribution per trajectory. The mechanism-level case_when is kept intact
-# for auditability against the review table, then collapsed to the only
-# distinction the figure draws: benchmark's defect vs agent's defect.
-# The state/side factor levels double as stacking order — left-to-right
-# renders as the reverse, so gray no-answer segments sit leftmost, red
-# incorrect segments next, correct green rightmost (fig 2's reading order),
-# with the agent-owned part of each state adjacent to its benchmark part.
 causes <- d |>
+  filter(responded, !correct_gpt5) |>
   mutate(
     cause = case_when(
-      responded & correct_gpt5 ~ "correct",
-      # no-answer runs, by mechanism
-      !responded & question == "bix-26-q4" & replica == 9 ~ "budget exhausted",
-      !responded ~ "harness install trap",
-      # answered-incorrect runs, by verified mechanism
       question == "bix-8-q2"  ~ "ambiguous question",
       question == "bix-26-q5" & replica %in% c(5, 9) ~ "ambiguous question",
       question == "bix-26-q5" & replica %in% c(1, 6, 7, 8) ~ "agent error",
       question == "bix-26-q4" ~ "agent error",
       TRUE ~ "answer-key error"
     ),
-    state = case_when(
-      cause == "correct" ~ "correct",
-      cause %in% c("harness install trap", "budget exhausted") ~ "no answer",
-      TRUE ~ "incorrect"
-    ) |> factor(levels = c("correct", "incorrect", "no answer")),
-    side = if_else(cause %in% c("agent error", "budget exhausted"),
-                   "agent's defect", "benchmark's / none"),
-    combo = factor(
-      str_c(state, " / ", side),
-      levels = c("correct / benchmark's / none",
-                 "incorrect / benchmark's / none", "incorrect / agent's defect",
-                 "no answer / benchmark's / none", "no answer / agent's defect")
-    )
+    side = factor(if_else(cause == "agent error",
+                          "agent's defect", "benchmark's defect"),
+                  levels = c("benchmark's defect", "agent's defect"))
   ) |>
-  count(capsule, question, state, side, combo)
+  count(capsule, question, side)
+
+# Give every question a row, so the all-correct questions keep their place in
+# the row order (all-correct is information too): zero-height bars render
+# nothing, and a muted zero marks them instead.
+causes <- distinct(d, capsule, question) |>
+  left_join(causes, by = c("capsule", "question")) |>
+  mutate(side = replace_na(side, "benchmark's defect"), n = replace_na(n, 0L))
+
+zeros <- causes |>
+  summarise(total = sum(n), .by = c(capsule, question)) |>
+  filter(total == 0)
 
 fig3 <- causes |>
   ggplot(aes(n, fct_rev(question))) +
-  # fill = fig 2's three state colors, untouched. The single addition: thin
-  # slanted white lines on the segments whose defect is the agent's; all
-  # unmarked red/gray segments are the benchmark's, which the title states.
+  # all bars are fig 2's incorrect red; the only encoding is the hatch that
+  # marks the agent's share of each bar
   geom_col_pattern(
-    aes(fill = state, pattern = side, group = combo),
+    aes(pattern = side, group = side),
+    fill = PAL$critical,
     width = .62, color = PAL$surface, linewidth = .7,
     pattern_fill = NA, pattern_colour = "white", pattern_alpha = .8,
     pattern_angle = 45, pattern_density = .001, pattern_spacing = .05,
     pattern_size = .25, pattern_key_scale_factor = .45
   ) +
-  geom_text(aes(label = n, group = combo),
+  geom_text(data = \(x) filter(x, n > 0),
+            aes(label = n, group = side),
             position = position_stack(vjust = .5),
             color = "black", size = 3, fontface = "bold") +
+  geom_text(data = zeros,
+            aes(x = .12, y = fct_rev(question), label = "0"),
+            inherit.aes = FALSE,
+            color = PAL$muted, size = 3, hjust = 0) +
   facet_grid(capsule ~ ., scales = "free_y", space = "free_y") +
-  scale_fill_manual(values = c(correct = PAL$good, incorrect = PAL$critical,
-                               `no answer` = PAL$noanswer),
-                    guide = guide_legend(order = 1,
-                                         override.aes = list(pattern = "none"))) +
-  # one pattern key: the hatched agent mark, shown on a neutral mid chip
-  scale_pattern_manual(values = c(`benchmark's / none` = "none",
-                                  `agent's defect` = "stripe"),
-                       breaks = "agent's defect") +
-  guides(pattern = guide_legend(order = 2,
-                                override.aes = list(fill = "#8a8880"))) +
-  scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
+  scale_pattern_manual(values = c(`benchmark's defect` = "none",
+                                  `agent's defect` = "stripe")) +
+  guides(pattern = guide_legend(override.aes = list(fill = PAL$critical))) +
+  scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10),
+                     expand = expansion(mult = c(0, .02))) +
   labs(
-    title = "Most scored failures are fixable benchmark-side; hatching marks the agent's share",
-    subtitle = "Fig 2's states, with every non-correct run attributed by re-deriving both the answer key and the agent's\nanswer from the raw capsule data (env/REVIEW_REPORT.md). Unmarked red and gray segments trace to the\nbenchmark (answer key, question wording, or the harness's own install instruction): 74 of 80 incorrect runs\nand 9 of 10 no-answer runs. The hatched segments — 6 incorrect, 1 no-answer — are the agent's.",
-    x = "runs (of 10)", y = NULL,
+    title = "Most incorrect answers trace to the benchmark; hatching marks the agent's share",
+    subtitle = "Every incorrect run attributed by re-deriving both the answer key and the agent's answer from the raw\ncapsule data (env/REVIEW_REPORT.md): 74 of 80 trace to the benchmark — the answer key or the question's\nwording. The 6 hatched runs, all in bix-26, are the agent's own.",
+    x = "incorrect runs (of 10)", y = NULL,
     caption = "gpt-5 majority-vote grading. bix-8-q5's print-floor key is absent only because gpt-5 grades p = 8.1e-194 as satisfying \"p < 2.2e-16\"."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank(),
                     legend.text = element_text(size = 8.5))
-save_fig(fig3, "fig3_failure_causes", 7.5, 5.1)
+save_fig(fig3, "fig3_failure_causes", 7.5, 4.8)
 
 # ---- fig 4: posterior per-question rates (bimodal correctness) -------------
 

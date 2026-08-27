@@ -94,9 +94,20 @@ writeup.
 
 ## An agent run has three outcomes, not two
 
-*(to write — fig 2: the no-answer runs, the harness's own install idiom, and
-why collapsing no-answer into incorrect misattributes harness defects to the
-model.)*
+A run can end three ways: a correct answer, a wrong answer, or no answer at
+all. BixBench only scores correct/incorrect, so the no-answer runs — 10 of my
+140, the gray bars in Figure 2 — get counted as wrong answers. That default
+deserves a closer look, because a no-answer run is not necessarily the agent's
+mistake — you can't tell whose problem it is from the score alone. So I read
+all ten trajectories. Only one was the agent's own doing: it ran out of its
+40-step budget. The other nine died the same way — the harness's own prompt
+tells the agent to install R packages through BiocManager, but the execution
+image doesn't ship BiocManager, so runs that followed the instruction died
+mid-install before any analysis began. The comparison across all 140 runs
+backs this up: runs that attempted a package install failed to answer 19.6% of
+the time (9 of 46), while the 93 runs that never attempted one all answered.
+Folding all ten into "incorrect" inflates the agent's error rate with failures
+that trace to the benchmark's own instructions.
 
 ## Where the failures actually come from
 

@@ -62,11 +62,11 @@ p-value.
 I ran each question 10 times at temperature 1.0 — the benchmark's own settings
 — for 140 runs total.
 
-| Capsule | Questions | Runs | Answered |
-|---|---:|---:|---:|
-| `bix-8` | 6 | 60 | 60 |
-| `bix-49` | 5 | 50 | 48 |
-| `bix-26` | 3 | 30 | 22 |
+| Capsule | Questions | Runs | Answered | Topic | Source |
+|---|---:|---:|---:|---|---|
+| `bix-8` | 6 | 60 | 60 | Bladder-cancer m6A epigenomics | [paper](https://doi.org/10.1016/j.canlet.2024.217002) · [data](https://doi.org/10.17632/dj4sb8h3c3.1) |
+| `bix-49` | 5 | 50 | 48 | Bohring-Opitz syndrome multiomics | [paper](https://doi.org/10.1172/jci.insight.167744) |
+| `bix-26` | 3 | 30 | 22 | *P. aeruginosa* quorum sensing | [paper](https://doi.org/10.17912/micropub.biology.001326) |
 
 Grading was its own replicated experiment. The paper names Claude 3.5 Sonnet
 as its judge, but that model (`claude-3-5-sonnet-20241022`) was retired in
@@ -243,3 +243,20 @@ and all classification rulings are mine.*
 - Chen Z, et al. **ScienceAgentBench: Toward Rigorous Assessment of Language
   Agents for Data-Driven Scientific Discovery.** ICLR 2025.
   [arXiv:2410.05080](https://arxiv.org/abs/2410.05080)
+
+Capsule source papers:
+
+- Shen C, Liu J, Xie F, et al. **N6-Methyladenosine enhances the translation
+  of ENO1 to promote the progression of bladder cancer by inhibiting PCNA
+  ubiquitination.** Cancer Letters 595:217002, 2024.
+  doi:[10.1016/j.canlet.2024.217002](https://doi.org/10.1016/j.canlet.2024.217002)
+  (bix-8; dataset doi:[10.17632/dj4sb8h3c3.1](https://doi.org/10.17632/dj4sb8h3c3.1))
+- Lin I, Wei A, Awamleh Z, et al. **Multiomics of Bohring-Opitz syndrome
+  truncating ASXL1 mutations identify canonical and noncanonical Wnt
+  signaling dysregulation.** JCI Insight 8(10):e167744, 2023.
+  doi:[10.1172/jci.insight.167744](https://doi.org/10.1172/jci.insight.167744)
+  (bix-49)
+- Abdul-Rahman F, Xavier J. **Reciprocal signaling between quorum sensing
+  mutants: A model for division of labor.** microPublication Biology, 2024.
+  doi:[10.17912/micropub.biology.001326](https://doi.org/10.17912/micropub.biology.001326)
+  (bix-26)

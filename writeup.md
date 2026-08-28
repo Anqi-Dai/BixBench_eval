@@ -182,13 +182,11 @@ and each one fixable:
   adjusted-p cutoff that the author's notebook never applies; the key was
   read off a plot rather than computed.
 
-A smaller set comes from wording that honestly allows more than one reading:
+A smaller set comes from questions that are unclear or ill-defined:
 bix-8-q2 could preclude a defensible 2×2 collapse by adding one phrase ("use
-all levels"), and bix-26-q5 asks for pathway significance defined by a
-fold-change cutoff, which standard enrichment analysis cannot supply — one
-run resolved the impossibility by switching to GSEA and using its standard
-effect score as the stand-in, a defensible reading that lands on a different
-number. None of this requires new data to fix; it is question wording and key
+all levels"), and one bix-26-q5 run took a defensible alternative route
+(GSEA) around the impossible pathway-significance definition described above.
+None of this requires new data to fix; it is question wording and key
 derivation, the cheapest parts of a benchmark to improve.
 
 ## Limitations and what I'd do next

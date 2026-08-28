@@ -226,7 +226,7 @@ fig2 <- states |>
                                 override.aes = list(fill = PAL$noanswer))) +
   scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
   labs(
-    title = fig_title(2, "An agent run has three outcomes, not two"),
+    title = fig_title(2, "No answer is its own outcome, not a wrong answer"),
     subtitle = "10 replicate runs per question (claude-sonnet-4-5, temperature 1.0); correctness by gpt-5 majority vote.",
     x = "runs (of 10)", y = NULL,
     caption = "BixBench: 3 capsules covering 14 questions, 10 replicate runs each = 140 runs."

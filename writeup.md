@@ -9,8 +9,9 @@ I ran BixBench — FutureHouse's benchmark for bioinformatics agents — under
 its own replication scheme, ten runs per question at temperature 1.0, and
 audited everything the score usually hides. That score is a single number:
 the share of runs a grader marks correct, pooled across replicates. Behind it
-sit three things the pooling flattens: the spread across replicates, the
-grader's reliability, and the answer keys themselves. On the three capsules I
+sit three things the pooling flattens: whether the agent answers the same
+question the same way twice, whether the grader is reliable, and whether the
+answer key is right. On the three capsules I
 studied (14 questions, 140 agent runs, ~$80 of API spend), most of what the
 benchmark scores as agent failure does not come from the agent: 73 of 80
 incorrect answers trace to the answer key or the question's wording, verified

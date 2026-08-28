@@ -59,8 +59,9 @@ three different source papers, so they are independent of each other. Together
 they carry 14 questions, and every answer is a number — a count, a ratio, a
 p-value.
 
-I ran each question 10 times at temperature 1.0 — the benchmark's own settings
-— for 140 runs total.
+I ran each question 10 times with
+[Claude Sonnet 4.5](https://www.anthropic.com/news/claude-sonnet-4-5) as the
+agent, at temperature 1.0 — the benchmark's own setting — for 140 runs total.
 
 | Capsule | Questions | Runs | Answered | Topic | Source |
 |---|---:|---:|---:|---|---|
@@ -68,25 +69,28 @@ I ran each question 10 times at temperature 1.0 — the benchmark's own settings
 | `bix-49` | 5 | 50 | 48 | Bohring-Opitz syndrome multiomics | [paper](https://doi.org/10.1172/jci.insight.167744) |
 | `bix-26` | 3 | 30 | 22 | *P. aeruginosa* quorum sensing | [paper](https://doi.org/10.17912/micropub.biology.001326) |
 
-Grading was its own replicated experiment. The paper names Claude 3.5 Sonnet
-as its judge, but that model (`claude-3-5-sonnet-20241022`) was retired in
-October 2025, so it can no longer be called. I graded with a newer model from
-the same Sonnet line (`claude-sonnet-4-5-20250929`) — and, to keep the OpenAI
-side comparable, with a GPT model from around the same time
-(`gpt-5-2025-08-07`), alongside the default the code actually ships
-(`gpt-4o-2024-11-20`). Each grader scored every answer 10 times — so grader
+Grading was its own replicated experiment. The paper names
+[Claude 3.5 Sonnet](https://platform.claude.com/docs/en/about-claude/model-deprecations)
+as its judge, but that model was retired in October 2025, so it can no longer
+be called. I graded with a newer model from the same Sonnet line
+([Claude Sonnet 4.5](https://www.anthropic.com/news/claude-sonnet-4-5)) — and,
+to keep the OpenAI side comparable, with a GPT model from around the same time
+([GPT-5](https://developers.openai.com/api/docs/models/gpt-5)), alongside the
+default the code actually ships
+([GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o)). The exact
+pinned versions are in the diagram below. Each grader scored every answer 10 times — so grader
 noise is measured rather than assumed — and the majority of those 10 verdicts
 decides: an answer counts as correct under a grader only when most of its 10
 calls say so. That way one flaky grading call can't flip a result.
 
 ```mermaid
 flowchart LR
-  A["3 capsules<br/>14 questions<br/>every answer numeric"] -->|"x10 replicates<br/>temperature 1.0"| B["140 agent runs"]
+  A["3 capsules<br/>14 questions<br/>every answer numeric"] -->|"x10 replicates<br/>claude-sonnet-4-5-20250929<br/>temperature 1.0"| B["140 agent runs"]
   B --> C["130 answers"]
   B --> D["10 no-answer runs<br/>kept, not discarded"]
   C -->|"x10 rounds"| E["gpt-4o-2024-11-20<br/>shipped default"]
-  C -->|"x10 rounds"| F["claude-sonnet-4-5<br/>successor to the paper's judge"]
-  C -->|"x10 rounds"| G["gpt-5<br/>same-era GPT"]
+  C -->|"x10 rounds"| F["claude-sonnet-4-5-20250929<br/>newer model, same line as the judge"]
+  C -->|"x10 rounds"| G["gpt-5-2025-08-07<br/>same-era GPT"]
 ```
 
 ## The grader is part of the instrument
@@ -126,21 +130,19 @@ that trace to the benchmark's own instructions.
 ## Correctness is a property of the question
 
 For the answered runs, I fit a Bayesian multilevel model,
-`correct ~ 1 + (1 | capsule/question)`, with gpt-5's verdicts as the outcome.
-In plain terms: the model estimates each question's own probability of getting
-a correct answer, while treating questions as grouped inside their capsules —
-so a question with only a handful of usable runs borrows information from its
-neighbors instead of being taken at face value, and the uncertainty from
-having just 10 runs per question is carried honestly into the estimates.
+`correct ~ 1 + (1 | capsule/question)`, with gpt-5's verdicts as the outcome:
+each question gets its own estimated probability of a correct answer,
+questions are grouped inside their capsules, and a question with only a few
+usable runs borrows information from its neighbors rather than being taken at
+face value.
 
-The result is Figure 3, and it is a split. The 14 questions fall into two
-clumps, near-certain success or near-certain failure, with almost nothing in
-between. All 5 bix-49 questions were graded incorrect on essentially every
+Figure 3 shows the result, and it is a split. The 14 questions fall into two
+clumps — near-certain success or near-certain failure — with almost nothing
+in between. All 5 bix-49 questions were graded incorrect on essentially every
 run; 4 of the 6 bix-8 questions were graded correct on essentially every run.
-Given an answer, correctness is a property of the question, not luck: the
-same question meets the same fate, run after run. Which raises the real
-question — what is it about these questions? That is what the error taxonomy
-digs into.
+Given an answer, correctness is a property of the question, not luck. So the
+real question is what it is about these questions — which is where the error
+taxonomy comes in.
 
 ## Where the failures actually come from
 

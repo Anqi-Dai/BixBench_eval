@@ -43,7 +43,8 @@ theme_viz <- theme_minimal(base_size = 12) +
     plot.background = element_rect(fill = PAL$surface, color = NA),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = PAL$grid, linewidth = .3),
-    plot.title = element_text(face = "bold", size = 13, color = PAL$ink),
+    plot.title = element_markdown(face = "bold", size = 13, color = PAL$ink,
+                                  lineheight = 1.25),
     plot.subtitle = element_text(color = PAL$ink2, size = 10),
     plot.caption = element_text(color = PAL$muted, size = 8, hjust = 0),
     axis.title = element_text(color = PAL$ink2, size = 10),
@@ -53,6 +54,12 @@ theme_viz <- theme_minimal(base_size = 12) +
     strip.text = element_text(face = "bold", color = PAL$ink),
     plot.title.position = "plot", plot.caption.position = "plot"
   )
+
+# "FIGURE N" eyebrow in muted small caps above the bold assertion title.
+fig_title <- function(n, title) {
+  str_c("<span style='font-size:8.5pt;color:", PAL$muted,
+        "'>FIGURE ", n, "</span><br>", title)
+}
 
 # Save each figure as PNG (posts, slides) and PDF (print/vector), same size.
 save_fig <- function(plot, name, width, height) {
@@ -124,9 +131,9 @@ GRADER_COL <- c(`gpt-4o (prev gen)` = "#E7298A",
                 `claude-sonnet-4-5` = "#7570B3",
                 `gpt-5`             = "#E6AB02")
 # sizes spaced so each visible ring is a thick, readable band
-GRADER_SIZE <- c(`gpt-4o (prev gen)` = 6.0,
-                 `claude-sonnet-4-5` = 3.8,
-                 `gpt-5`             = 1.6)
+GRADER_SIZE <- c(`gpt-4o (prev gen)` = 4.4,
+                 `claude-sonnet-4-5` = 2.8,
+                 `gpt-5`             = 1.2)
 
 fig1 <- grader_rates |>
   ggplot(aes(rate, fct_rev(question))) +
@@ -135,7 +142,7 @@ fig1 <- grader_rates |>
   # diameters, so full overlap still shows all three graders as concentric
   # circles rather than one big filled disc
   geom_point(aes(color = grader, size = grader),
-             shape = 21, fill = NA, stroke = 1.8) +
+             shape = 21, fill = NA, stroke = 1.5) +
   # selective direct labels, only where the generations part ways
   # labels point inward (toward plot center) and sit just above the
   # connector, so they never clip at the panel edge
@@ -151,18 +158,18 @@ fig1 <- grader_rates |>
   scale_size_manual(values = GRADER_SIZE) +
   # legend dots at a uniform readable size; identity in the plot itself is
   # carried by the nesting order, not dot size
-  guides(color = guide_legend(override.aes = list(size = 3, stroke = 1.8)),
+  guides(color = guide_legend(override.aes = list(size = 2.6, stroke = 1.5)),
          size = "none") +
   scale_x_continuous(limits = c(-.06, 1.06), breaks = c(0, .5, 1),
                      labels = c("0%", "50%", "100%")) +
   labs(
-    title = "Grader disagreement follows model generation, not model family",
-    subtitle = "Share of answered runs graded correct per question (majority of 10 grading replicates per grader).\ngpt-5 and claude-sonnet-4-5 — different families, current generation — agree on all 130 answers (nested dots);\ngpt-4o — BixBench's default grader, one generation behind its own family-mate — flips whole questions.",
+    title = fig_title(1, "Grader disagreement follows model generation, not model family"),
+    subtitle = "Share of answered runs graded correct per question, by grader (majority of 10 grading rounds per answer).\nNested rings = the graders agree on that question.",
     x = "runs graded correct", y = NULL,
     caption = "Same 130 answers under all three graders. gpt-5 is the primary grader for the remaining figures."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank())
-save_fig(fig1, "fig1_grader_flips", 7.5, 6.6)
+save_fig(fig1, "fig1_grader_flips", 7, 7)
 
 # ---- fig 2: three outcome states per question ------------------------------
 
@@ -219,14 +226,14 @@ fig2 <- states |>
                                 override.aes = list(fill = PAL$noanswer))) +
   scale_x_continuous(breaks = seq(0, 10, 2), expand = expansion(mult = c(0, .02))) +
   labs(
-    title = "An agent run has three outcomes, not two",
-    subtitle = "10 replicate runs per question (claude-sonnet-4-5, temp 1.0); correctness by gpt-5 majority vote.\nBixBench scores every run correct/incorrect only, so it counts the gray no-answer runs as incorrect answers.",
+    title = fig_title(2, "An agent run has three outcomes, not two"),
+    subtitle = "10 replicate runs per question (claude-sonnet-4-5, temperature 1.0); correctness by gpt-5 majority vote.",
     x = "runs (of 10)", y = NULL,
     caption = "BixBench: 3 capsules covering 14 questions, 10 replicate runs each = 140 runs."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank(),
                     legend.text = element_text(size = 8.5))
-save_fig(fig2, "fig2_three_states", 7.5, 4.8)
+save_fig(fig2, "fig2_three_states", 7, 7)
 
 # ---- fig 3: posterior per-question correctness (bimodal) -------------------
 
@@ -266,15 +273,15 @@ fig3 <- post |>
   scale_x_continuous(limits = c(0, 1), breaks = c(0, .5, 1),
                      labels = c("0", "0.5", "1")) +
   labs(
-    title = "Given an answer, correctness is a property of the question, not luck",
-    subtitle = "Answered runs only. Each dot is a question's estimated underlying success probability (posterior median,\nhierarchical model); the band is 95% uncertainty about that probability — 10 runs cannot pin it exactly\neven when all 10 agree.",
+    title = fig_title(3, "Given an answer, correctness is a property of the question, not luck"),
+    subtitle = "Answered runs only. Dot = a question's estimated probability of a correct answer (posterior median);\nband = 95% uncertainty about that probability.",
     x = "estimated probability of a correct answer", y = NULL,
     caption = "Bernoulli GLMMs, question nested in capsule; gpt-5 majority-vote grading. Question-level SD (stage 2): 3.2 log-odds."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank(),
                     legend.position = "none",
                     strip.text.y = element_markdown(face = "bold"))
-save_fig(fig3, "fig3_question_rates", 7.5, 4.8)
+save_fig(fig3, "fig3_question_rates", 7, 7)
 
 # ---- fig 4: the incorrect runs, split by verified cause --------------------
 
@@ -353,14 +360,14 @@ fig4 <- causes |>
   scale_x_continuous(breaks = seq(0, 10, 2), limits = c(0, 10),
                      expand = expansion(mult = c(0, .02))) +
   labs(
-    title = "Most incorrect answers trace to the benchmark; hatching marks the agent's share",
-    subtitle = "Every incorrect run attributed by re-deriving both the answer key and the agent's answer from the raw\ncapsule data (env/REVIEW_REPORT.md): 73 of 80 trace to the benchmark — the answer key or the question's\nwording. The 7 hatched runs, all in bix-26, are the agent's own.",
+    title = fig_title(4, "Most incorrect answers trace to the benchmark"),
+    subtitle = "Every incorrect run attributed by re-deriving both the answer key and the agent's answer\nfrom the raw capsule data (env/REVIEW_REPORT.md).",
     x = "incorrect runs (of 10)", y = NULL,
     caption = "gpt-5 majority-vote grading. bix-8-q5's print-floor key is absent only because gpt-5 grades p = 8.1e-194 as satisfying \"p < 2.2e-16\"."
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank(),
                     legend.text = element_text(size = 8.5))
-save_fig(fig4, "fig4_failure_causes", 7.5, 4.8)
+save_fig(fig4, "fig4_failure_causes", 7, 7)
 
 
 message("Wrote figures to results/figures/")

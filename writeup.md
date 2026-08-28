@@ -177,15 +177,43 @@ derivation, the cheapest parts of a benchmark to improve.
 
 ## Limitations and what I'd do next
 
-*(to write — small N stated plainly; one agent configuration; graders are
-themselves LLMs, and the Claude grader is the same model that produced the
-answers, mirroring the benchmark's own agentic self-grading path; the remedy
-for the benchmark's grader noise is a one-line grader-config change; next
-steps. Include the disclosure line: "Analysis, verification scripts, and
-figures were built with Claude Code as an assistant; every recomputation is
-a committed script (`R/verify_*.R`, `py/verify_*.py`) that reproduces the
-numbers independently of who typed it, and all classification rulings are
-mine.")*
+This is a small study by design. The agent-run budget bought three carefully
+chosen capsules — 14 questions from three source papers — so the findings
+describe those capsules, not BixBench as a whole. The specific failure causes
+are concentrated too: the gene-versus-transcript cases all come from one
+capsule. What travels beyond these three capsules is the audit itself, not
+the numbers: replicate the runs and keep the spread, measure the grader
+before trusting it, score no-answer as its own outcome, and re-derive the key
+before it referees anything.
+
+One agent model ran everything, and my Claude grader is the same model that
+produced the answers — mirroring the benchmark's own agentic setup, where
+each model grades itself. If that breeds leniency toward its own answers,
+this design can't detect it. The clean test is straightforward: run gpt-5 as
+the agent too, have both families grade both answer sets, and model the
+grader-by-answerer interaction. Likewise, everything ran at temperature 1.0
+because that is what the benchmark ships; how the instability behaves at
+other temperatures is untested and worth knowing.
+
+The graders here had an easy job — every answer is a number. On questions
+with free-text or multi-part answers, an LLM verdict deserves less trust, and
+spot-checking by human graders would be worth the cost. And the deepest
+lesson cuts at the ground truth itself: an answer key derived from one
+author's notebook needs the same verification the agent gets — re-derived
+from the raw data, ideally with an independent model in the loop — before it
+referees anything.
+
+Two cheap upstream fixes fall straight out of this study: move the default
+grader to a current-generation model (a one-line config change), and score
+no-answer as its own state instead of folding it into incorrect. If I
+extended the benchmark itself, I'd start with the field it doesn't cover:
+BixBench has no microbiome or metagenomics capsules at all — confirmed three
+independent ways — and that is the corner of biology I know best.
+
+*Analysis, verification scripts, and figures were built with Claude Code as
+an assistant; every recomputation is a committed script (`R/verify_*.R`,
+`py/verify_*.py`) that reproduces the numbers independently of who typed it,
+and all classification rulings are mine.*
 
 ## References
 

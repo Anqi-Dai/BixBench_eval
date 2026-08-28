@@ -41,8 +41,10 @@ bioinformatics agents, does something right that most benchmarks skip: it runs
 every analysis ten times, because agents don't give the same answer twice. But
 those ten runs get folded into a single accuracy fraction, and the spread — how
 often the agent disagrees with itself — is never reported. I've spent seven
-years doing statistics on messy clinical data, where the spread usually *is*
-the story. So that's the question I went after: what does the discarded
+years doing statistics on messy clinical data, where variation is often the
+story: two treatments with the same average can behave very differently
+patient to patient, and no average generalizes until you know the variation
+around it. So that's the question I went after: what does the discarded
 variance say?
 
 ## What I ran

@@ -106,7 +106,7 @@ Not a surprising result, but a consequential one: every number downstream
 depends on which grader reads the answers. I use gpt-5 for the rest of this
 writeup.
 
-## An agent run has three outcomes, not two
+## No answer is its own outcome, not a wrong answer
 
 A run can end three ways: a correct answer, a wrong answer, or no answer at
 all. BixBench only scores correct/incorrect, so the no-answer runs — 10 of my

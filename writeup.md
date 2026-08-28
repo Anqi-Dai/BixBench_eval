@@ -109,16 +109,18 @@ the time (9 of 46), while the 93 runs that never attempted one all answered.
 Folding all ten into "incorrect" inflates the agent's error rate with failures
 that trace to the benchmark's own instructions.
 
-## Where the failures actually come from
-
-*(to write — fig 3: incorrect and no-answer runs split by verified cause,
-warm = benchmark-attributable, cool = agent-attributable; one concrete example,
-link REVIEW_REPORT.md.)*
-
 ## Correctness is a property of the question
 
-*(to write — fig 4: the two-stage model, bimodal per-question rates, what
-partial pooling buys; bridge to the taxonomy.)*
+*(to write — fig 3: bimodal per-question correctness among the answered runs —
+all 5 bix-49 questions graded incorrect, 4 of 6 bix-8 questions graded correct;
+between-question separation dwarfs the per-question uncertainty; ends with the
+question the taxonomy answers: what is it about these questions?)*
+
+## Where the failures actually come from
+
+*(to write — fig 4: incorrect runs split by verified cause, plain red =
+benchmark-attributable, hatched = agent's own; one concrete example, link
+REVIEW_REPORT.md.)*
 
 ## Limitations and what I'd do next
 

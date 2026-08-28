@@ -117,21 +117,21 @@ script. Headline results, all in `results/two_stage_summary.txt`:
   trap, exactly where it should be.
 - Stage 2: finding 6 above. The "typical question" rate (31%) is nearly
   meaningless as a single number; the honest summary is the bimodal
-  per-question rates, which fig 4 shows directly.
+  per-question rates, which fig 3 shows directly.
 - A known-mechanism covariate (needs-Bioconductor) was deliberately left out:
   with 3 capsules it is perfectly confounded with capsule identity, and the
   mechanism is already established deterministically in `env/REVIEW_REPORT.md`.
 
 `R/figures.R` renders the four writeup figures, one conclusion per title
-(assertion-evidence), ordered so each licenses the next (renumbered
-2026-08-24 — the grader figure moved first because the grader decides what
-counts as correct in everything downstream): fig 1 the three-grader
+(assertion-evidence), ordered so each licenses the next (reordered
+2026-08-28 — phenomenon now precedes diagnosis): fig 1 the three-grader
 comparison as concentric rings (disagreement follows generation, not
 family; gpt-5 becomes the primary grader), fig 2 the three outcome states
-per question, fig 3 the incorrect/no-answer states split by verified cause
-(warm = benchmark-attributable, cool = agent-attributable, from
-`env/REVIEW_REPORT.md`), fig 4 the per-question posterior rates from both
-stages.
+per question with the single agent-owned no-answer hatched, fig 3 the
+per-question posterior correctness rates (stage 2 only — bimodal; the
+P(answered) panel was dropped as redundant with fig 2), fig 4 the
+incorrect runs split by verified cause (plain = benchmark's, hatched =
+agent's, from `env/REVIEW_REPORT.md`).
 
 Caveats already encoded in the figures/model, to carry into the writeup:
 

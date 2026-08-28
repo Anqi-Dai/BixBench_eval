@@ -7,8 +7,8 @@
 #          (so "correct" is a measured quantity; gpt-5 is the primary grader
 #          everywhere downstream)
 #   fig2 — the outcome has three states; refusals/no-answers are not wrong answers
-#   fig3 — the incorrect and no-answer states, split by verified cause
-#   fig4 — correctness is a property of the question, not run-to-run luck
+#   fig3 — given an answer, correctness is a property of the question, not luck
+#   fig4 — the incorrect runs, split by verified cause
 #
 # Colors follow the dataviz reference palette (documented passing sets, light
 # mode): categorical slots 1-3 for capsule identity, status good/critical for
@@ -117,7 +117,7 @@ flips <- grader_rates |>
 
 # Concentric sizes, largest drawn first: exact agreement (the common case)
 # shows as nested rings instead of one grader's dot hiding the others.
-# Dark2 (RColorBrewer) hues chosen to avoid fig4's blue/orange/aqua:
+# Dark2 (RColorBrewer) hues chosen to avoid fig3's blue/orange/aqua:
 # magenta outer ring, purple middle, mustard center — each ring pair differs
 # strongly in hue and lightness so the nesting stays readable
 GRADER_COL <- c(`gpt-4o (prev gen)` = "#E7298A",
@@ -228,7 +228,55 @@ fig2 <- states |>
                     legend.text = element_text(size = 8.5))
 save_fig(fig2, "fig2_three_states", 7.5, 4.8)
 
-# ---- fig 3: the incorrect runs, split by verified cause --------------------
+# ---- fig 3: posterior per-question correctness (bimodal) -------------------
+
+# Partially pooled posterior rates from the stage-2 model: median + 95%
+# interval per question, answered runs only. Stage 1's P(answered) panel was
+# dropped deliberately — it restates fig 2's no-answer pattern, and the
+# section's argument only needs the correctness stage.
+fit_correct <- readRDS("results/fits/stage2_correct_gpt5.rds")
+
+# posterior_epred on one row per question gives that question's own pooled
+# rate; summarize to median and 95% interval.
+post <- {
+  nd <- distinct(as_tibble(fit_correct$data), capsule, question)
+  ep <- posterior_epred(fit_correct, newdata = nd)
+  nd |> mutate(
+    rate = apply(ep, 2, median),
+    lo = apply(ep, 2, quantile, .025),
+    hi = apply(ep, 2, quantile, .975)
+  )
+} |>
+  mutate(
+    capsule = factor(capsule, levels = capsule_order),
+    question = fct_reorder(question, as.integer(str_extract(question, "[0-9]+$")))
+  )
+
+fig3 <- post |>
+  ggplot(aes(rate, fct_rev(question), color = capsule)) +
+  # 95% interval as a thin line, median as a >=8px point
+  geom_linerange(aes(xmin = lo, xmax = hi), linewidth = .7, alpha = .55) +
+  geom_point(size = 2.6) +
+  # strip labels rendered in the capsule's own color (ggtext markdown), so
+  # the dot colors need no separate legend
+  facet_grid(capsule ~ ., scales = "free_y", space = "free_y",
+             labeller = labeller(capsule = \(x)
+               str_c("<span style='color:", PAL$capsule[x], "'>", x, "</span>"))) +
+  scale_color_manual(values = PAL$capsule) +
+  scale_x_continuous(limits = c(0, 1), breaks = c(0, .5, 1),
+                     labels = c("0", "0.5", "1")) +
+  labs(
+    title = "Given an answer, correctness is a property of the question, not luck",
+    subtitle = "Answered runs only. Each dot is a question's estimated underlying success probability (posterior median,\nhierarchical model); the band is 95% uncertainty about that probability — 10 runs cannot pin it exactly\neven when all 10 agree.",
+    x = "estimated probability of a correct answer", y = NULL,
+    caption = "Bernoulli GLMMs, question nested in capsule; gpt-5 majority-vote grading. Question-level SD (stage 2): 3.2 log-odds."
+  ) +
+  theme_viz + theme(panel.grid.major.y = element_blank(),
+                    legend.position = "none",
+                    strip.text.y = element_markdown(face = "bold"))
+save_fig(fig3, "fig3_question_rates", 7.5, 4.8)
+
+# ---- fig 4: the incorrect runs, split by verified cause --------------------
 
 # Only fig 2's red state, attributed. Every incorrect run was re-derived —
 # both the answer key and the agent's answer — from the raw capsule data
@@ -277,7 +325,7 @@ zeros <- causes |>
   summarise(total = sum(n), .by = c(capsule, question)) |>
   filter(total == 0)
 
-fig3 <- causes |>
+fig4 <- causes |>
   ggplot(aes(n, fct_rev(question))) +
   # all bars are fig 2's incorrect red; the only encoding is the hatch that
   # marks the agent's share of each bar
@@ -311,59 +359,7 @@ fig3 <- causes |>
   ) +
   theme_viz + theme(panel.grid.major.y = element_blank(),
                     legend.text = element_text(size = 8.5))
-save_fig(fig3, "fig3_failure_causes", 7.5, 4.8)
+save_fig(fig4, "fig4_failure_causes", 7.5, 4.8)
 
-# ---- fig 4: posterior per-question rates (bimodal correctness) -------------
-
-# Partially pooled posterior rates from the fitted models: median + 95%
-# interval per question, for both stages side by side.
-fits <- list(
-  "P(answered)"            = readRDS("results/fits/stage1_responded.rds"),
-  "P(correct | answered)"  = readRDS("results/fits/stage2_correct_gpt5.rds")
-)
-
-# posterior_epred on one row per question gives that question's own pooled
-# rate; summarize to median and 95% interval.
-post <- imap(fits, \(fit, label) {
-  nd <- distinct(as_tibble(fit$data), capsule, question)
-  ep <- posterior_epred(fit, newdata = nd)
-  nd |> mutate(
-    stage = label,
-    rate = apply(ep, 2, median),
-    lo = apply(ep, 2, quantile, .025),
-    hi = apply(ep, 2, quantile, .975)
-  )
-}) |>
-  list_rbind() |>
-  mutate(
-    capsule = factor(capsule, levels = capsule_order),
-    stage = factor(stage, levels = names(fits)),
-    question = fct_reorder(question, as.integer(str_extract(question, "[0-9]+$")))
-  )
-
-fig4 <- post |>
-  ggplot(aes(rate, fct_rev(question), color = capsule)) +
-  # 95% interval as a thin line, median as a >=8px point
-  geom_linerange(aes(xmin = lo, xmax = hi), linewidth = .7, alpha = .55) +
-  geom_point(size = 2.6) +
-  # strip labels rendered in the capsule's own color (ggtext markdown), so
-  # the dot colors need no separate legend
-  facet_grid(capsule ~ stage, scales = "free_y", space = "free_y",
-             labeller = labeller(capsule = \(x)
-               str_c("<span style='color:", PAL$capsule[x], "'>", x, "</span>"))) +
-  scale_color_manual(values = PAL$capsule) +
-  scale_x_continuous(limits = c(0, 1), breaks = c(0, .5, 1),
-                     labels = c("0", "0.5", "1")) +
-  labs(
-    title = "Given an answer, correctness is a property of the question, not luck",
-    subtitle = "Each dot is a question's estimated underlying success probability (posterior median, hierarchical model);\nthe band is 95% uncertainty about that probability — 10 runs cannot pin it exactly even when all 10 agree.",
-    x = "estimated probability", y = NULL,
-    caption = "Bernoulli GLMMs, question nested in capsule; gpt-5 majority-vote grading. Question-level SD (stage 2): 3.2 log-odds."
-  ) +
-  theme_viz + theme(panel.grid.major.y = element_blank(),
-                    legend.position = "none",
-                    panel.spacing.x = unit(1.2, "lines"),
-                    strip.text.y = element_markdown(face = "bold"))
-save_fig(fig4, "fig4_question_rates", 7.5, 4.8)
 
 message("Wrote figures to results/figures/")

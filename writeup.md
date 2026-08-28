@@ -111,10 +111,22 @@ that trace to the benchmark's own instructions.
 
 ## Correctness is a property of the question
 
-*(to write — fig 3: bimodal per-question correctness among the answered runs —
-all 5 bix-49 questions graded incorrect, 4 of 6 bix-8 questions graded correct;
-between-question separation dwarfs the per-question uncertainty; ends with the
-question the taxonomy answers: what is it about these questions?)*
+For the answered runs, I fit a Bayesian multilevel model,
+`correct ~ 1 + (1 | capsule/question)`, with gpt-5's verdicts as the outcome.
+In plain terms: the model estimates each question's own probability of getting
+a correct answer, while treating questions as grouped inside their capsules —
+so a question with only a handful of usable runs borrows information from its
+neighbors instead of being taken at face value, and the uncertainty from
+having just 10 runs per question is carried honestly into the estimates.
+
+The result is Figure 3, and it is a split. The 14 questions fall into two
+clumps, near-certain success or near-certain failure, with almost nothing in
+between. All 5 bix-49 questions were graded incorrect on essentially every
+run; 4 of the 6 bix-8 questions were graded correct on essentially every run.
+Given an answer, correctness is a property of the question, not luck: the
+same question meets the same fate, run after run. Which raises the real
+question — what is it about these questions? That is what the error taxonomy
+digs into.
 
 ## Where the failures actually come from
 

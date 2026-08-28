@@ -130,9 +130,48 @@ digs into.
 
 ## Where the failures actually come from
 
-*(to write — fig 4: incorrect runs split by verified cause, plain red =
-benchmark-attributable, hatched = agent's own; one concrete example, link
-REVIEW_REPORT.md.)*
+To find out, I re-derived every incorrect answer — the answer key and the
+agent's number both — from the raw capsule data, inside the benchmark's own
+Docker image. The full case-by-case table is in the repo
+([REVIEW_REPORT.md](env/REVIEW_REPORT.md)); Figure 4 shows the totals.
+
+A few incorrect answers are the agent's own. In four bix-26-q5 runs the agent
+misread gene-level DESeq2 output files as pathway tables and reported a row
+count without ever running enrichment — the columns are unmistakably
+gene-level, and six of its ten sibling runs read them correctly. A fifth run
+on the same question invented a pathway-level fold-change metric to satisfy
+the question's wording; the question does ask for a metric that standard
+enrichment analysis cannot supply, but the right response is to say so, not
+to fabricate one. And in two bix-26-q4 runs the agent simply landed on
+different numbers where five of seven sibling runs reproduced the key
+exactly. That is the agent's full share: seven runs, the hatched segments in
+Figure 4.
+
+The other 73 incorrect runs trace back to the benchmark, in three recurring
+ways — each one the kind of thing that slips into any hand-built analysis,
+and each one fixable:
+
+- **The key quietly does an analysis the question never states.** All 47
+  incorrect bix-49 runs come down to one line: the author's model adjusts for
+  sex, but no question mentions sex. Adjusting was a perfectly reasonable
+  choice — the question just never passes it on, so the agent's unadjusted
+  numbers are exact answers to the question as written.
+- **The question asks at one level; the key answers at another.** bix-8's
+  questions ask about genes, but the key counts transcript rows (20 runs).
+  The agent deduplicated transcripts to genes — arguably the more careful
+  reading of the question — and was graded incorrect for it.
+- **The key contradicts the question's own thresholds.** bix-26-q5 states an
+  adjusted-p cutoff that the author's notebook never applies; the key was
+  read off a plot rather than computed.
+
+A smaller set comes from wording that honestly allows more than one reading:
+bix-8-q2 could preclude a defensible 2×2 collapse by adding one phrase ("use
+all levels"), and bix-26-q5 asks for pathway significance defined by a
+fold-change cutoff, which standard enrichment analysis cannot supply — one
+run resolved the impossibility by switching to GSEA and using its standard
+effect score as the stand-in, a defensible reading that lands on a different
+number. None of this requires new data to fix; it is question wording and key
+derivation, the cheapest parts of a benchmark to improve.
 
 ## Limitations and what I'd do next
 
@@ -140,7 +179,11 @@ REVIEW_REPORT.md.)*
 themselves LLMs, and the Claude grader is the same model that produced the
 answers, mirroring the benchmark's own agentic self-grading path; the remedy
 for the benchmark's grader noise is a one-line grader-config change; next
-steps.)*
+steps. Include the disclosure line: "Analysis, verification scripts, and
+figures were built with Claude Code as an assistant; every recomputation is
+a committed script (`R/verify_*.R`, `py/verify_*.py`) that reproduces the
+numbers independently of who typed it, and all classification rulings are
+mine.")*
 
 ## References
 

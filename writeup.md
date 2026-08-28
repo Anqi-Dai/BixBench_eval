@@ -5,10 +5,19 @@ references live in `references.bib`, every entry verified against arXiv.*
 
 ## The finding
 
-*(to write — the three-sentence lead: the dispersion was generated and never
-reported; most scored failure traces to the benchmark; the fixes are small.
-State the base immediately: 3 capsules, 14 questions, 140 trajectories, one
-model, $80.)*
+I ran BixBench — FutureHouse's benchmark for bioinformatics agents — under
+its own replication scheme, ten runs per question at temperature 1.0, and
+audited everything the score usually hides: the spread across replicates, the
+grader's reliability, and the answer keys themselves. On the three capsules I
+studied (14 questions, 140 agent runs, ~$80 of API spend), most of what the
+benchmark scores as agent failure does not come from the agent: 73 of 80
+incorrect answers trace to the answer key or the question's wording, verified
+by re-deriving both the key and the agent's answer from the raw data, and 9
+of the 10 runs that never answered died following the harness's own
+package-install instruction. The agent's own share is 8 runs out of 140. None
+of the fixes require new data — clearer wording, verified keys, a three-state
+score — and the audit that found them transfers to any benchmark that
+replicates its runs.
 
 ## Why this benchmark, why this question
 

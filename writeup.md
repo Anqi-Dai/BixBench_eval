@@ -203,9 +203,8 @@ author's notebook needs the same verification the agent gets — re-derived
 from the raw data, ideally with an independent model in the loop — before it
 referees anything.
 
-Two cheap upstream fixes fall straight out of this study: move the default
-grader to a current-generation model (a one-line config change), and score
-no-answer as its own state instead of folding it into incorrect. If I
+One cheap upstream fix falls straight out of this study: score no-answer as
+its own state instead of folding it into incorrect. If I
 extended the benchmark itself, I'd start with the field it doesn't cover:
 BixBench has no microbiome or metagenomics capsules at all — confirmed three
 independent ways — and that is the corner of biology I know best.

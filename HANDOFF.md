@@ -144,8 +144,11 @@ Caveats already encoded in the figures/model, to carry into the writeup:
 **Phase 4 — writing up the taxonomy.** The analysis is done; only prose remains.
 The two open classification calls were resolved by domain review on 2026-08-24
 (bix-8-q2's 2×2 stays question ambiguity; bix-26-q5's 58-answer replicates are
-plain agent error, no wording excuse), so the taxonomy in `env/REVIEW_REPORT.md`
-is final. The two remaining reading items are also done (2026-08-24, performed
+plain agent error, no wording excuse), and a third ruling on 2026-08-28 moved
+bix-26-q5 replicate 9 (the invented pathway fold-change metric) to agent error
+as well — fabricating a metric to satisfy impossible wording is the agent's
+choice. Agent share: 7 of 80 incorrect runs. The taxonomy in
+`env/REVIEW_REPORT.md` is final. The two remaining reading items are also done (2026-08-24, performed
 by Claude with computational verification rather than by eye): the expert
 notebooks for all three campaign capsules were read and every answer-key
 derivation confirmed by recomputation, and the 10 notebooks for `bix-26-q5`

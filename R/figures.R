@@ -291,9 +291,10 @@ save_fig(fig3, "fig3_question_rates", 7.5, 4.8)
 #   - bix-8-q3 rep 2 -> answer-key error (gene-level answer vs row-level key)
 #   - bix-26-q5 reps 0/2/4 (answered 1, the stated-thresholds answer) ->
 #     answer-key error (the key skips its own padj filter)
-#   - bix-8-q2 rep 0 (2x2) and bix-26-q5 reps 5/9 (GSEA; hand-rolled
-#     pathway-LFC) -> ambiguous question
-#   - bix-26-q5 reps 1/6/7/8 (the 58s) and bix-26-q4 reps 0/5 -> agent error
+#   - bix-8-q2 rep 0 (2x2) and bix-26-q5 rep 5 (GSEA) -> ambiguous question
+#   - bix-26-q5 reps 1/6/7/8 (the 58s) and rep 9 (invented pathway-LFC
+#     metric; ruled agent error 2026-08-28), plus bix-26-q4 reps 0/5 ->
+#     agent error
 # bix-8-q5 (the print-floor key) does not appear: gpt-5 grades those runs
 # correct, so that benchmark defect is absorbed by the grader, not visible
 # in this figure.
@@ -303,8 +304,8 @@ causes <- d |>
   mutate(
     cause = case_when(
       question == "bix-8-q2"  ~ "ambiguous question",
-      question == "bix-26-q5" & replica %in% c(5, 9) ~ "ambiguous question",
-      question == "bix-26-q5" & replica %in% c(1, 6, 7, 8) ~ "agent error",
+      question == "bix-26-q5" & replica == 5 ~ "ambiguous question",
+      question == "bix-26-q5" & replica %in% c(1, 6, 7, 8, 9) ~ "agent error",
       question == "bix-26-q4" ~ "agent error",
       TRUE ~ "answer-key error"
     ),
@@ -353,7 +354,7 @@ fig4 <- causes |>
                      expand = expansion(mult = c(0, .02))) +
   labs(
     title = "Most incorrect answers trace to the benchmark; hatching marks the agent's share",
-    subtitle = "Every incorrect run attributed by re-deriving both the answer key and the agent's answer from the raw\ncapsule data (env/REVIEW_REPORT.md): 74 of 80 trace to the benchmark — the answer key or the question's\nwording. The 6 hatched runs, all in bix-26, are the agent's own.",
+    subtitle = "Every incorrect run attributed by re-deriving both the answer key and the agent's answer from the raw\ncapsule data (env/REVIEW_REPORT.md): 73 of 80 trace to the benchmark — the answer key or the question's\nwording. The 7 hatched runs, all in bix-26, are the agent's own.",
     x = "incorrect runs (of 10)", y = NULL,
     caption = "gpt-5 majority-vote grading. bix-8-q5's print-floor key is absent only because gpt-5 grades p = 8.1e-194 as satisfying \"p < 2.2e-16\"."
   ) +

@@ -68,7 +68,7 @@ agent's analysis.
 | 8 | `bix-49-q1` | 4.80 | **5.15** | Two compounding causes: the key is the padj-based max under `~sex+condition` (4.8028); the agent took q1's literal "significant (p<0.05)" as raw p under its design (5.1467). Nothing to do with apeglm settings. | GT hidden spec + question ambiguity | **Documented** |
 | 9 | `bix-49-q2` | 7.04E-26 | **8.76e-25** | GRIK5 padj: 7.0400e-26 under the sex design, 8.7632e-25 under the agent's. The 12× gap is the design formula, not the gene universe. | GT error — hidden analysis spec | **Documented** |
 | 10 | `bix-49-q5` | 3.83 | **3.87** (9/9) | GRIK5 LFC: 3.8255 vs 3.8737 under the two designs. This is the question the two graders split on 9/9 vs 9/9 — not a rounding-tolerance issue; the two numbers are different analyses. | GT error — hidden analysis spec | **Documented** |
-| 11 | `bix-26-q5` | 3 | **1** (modal; 1–58) | The author's notebook filters DEGs by **fold change only — the padj < 0.05 the question states is never applied** — enriches up/down separately, and then **never computes the set difference in code**: the notebook ends at a dotplot, so the key was read off the plot. That exact pipeline reproduces the key today (3: pau02024, pau00460, pau00643). Under the question's stated thresholds the answer is 1 — the agent's modal answer. The replicate scatter: four replicates answering 58 misread the gene-level DESeq2 files as pathway tables and never ran enrichment — *ruled plain agent error (decision 2026-08-24): the column signature (`baseMean`, `lfcSE`, `stat`, locus-tag ids) is unmistakably gene-level and 6/10 replicates recognized it, so the question's confused wording does not excuse it*. The 12-replicate hit the wording contradiction explicitly and switched to GSEA NES — that one stays wording-driven. | GT error — key contradicts stated thresholds, + agent error (the 58s) | **Documented** |
+| 11 | `bix-26-q5` | 3 | **1** (modal; 1–58) | The author's notebook filters DEGs by **fold change only — the padj < 0.05 the question states is never applied** — enriches up/down separately, and then **never computes the set difference in code**: the notebook ends at a dotplot, so the key was read off the plot. That exact pipeline reproduces the key today (3: pau02024, pau00460, pau00643). Under the question's stated thresholds the answer is 1 — the agent's modal answer. The replicate scatter: four replicates answering 58 misread the gene-level DESeq2 files as pathway tables and never ran enrichment — *ruled plain agent error (decision 2026-08-24): the column signature (`baseMean`, `lfcSE`, `stat`, locus-tag ids) is unmistakably gene-level and 6/10 replicates recognized it, so the question's confused wording does not excuse it*. The 12-replicate hit the wording contradiction explicitly and switched to GSEA NES — that one stays wording-driven. Replicate 9 (answer 2) *invented* a pathway-level fold-change metric to satisfy the wording — ruled agent error (decision 2026-08-28): fabricating a metric is the agent's choice; the correct behavior is to flag that the question asks for one that standard ORA cannot supply. | GT error — key contradicts stated thresholds, + agent error (the 58s; rep 9's invented metric) | **Documented** |
 | 12 | `bix-26-q4` reps 0, 5 | 5 | 7, 33 | The key reproduces exactly (5 common down-pathways) under both the stated thresholds and the author's own pipeline, and 5/7 answering replicates match it. The two outliers are genuine agent errors. | Agent error / instability | **Verified** |
 | 13 | `bix-26-q4` rep 9 | — | *no answer* | The only truncation in the campaign: 40 of 40 actions. Distinct from the nine Bioconductor deaths. | Budget exhaustion | **Verified** |
 
@@ -94,11 +94,13 @@ noise within one.
 | Hand-rolled ORA: own gene→pathway mapping, BH correction, and a constructed pathway-level "log fold change" to satisfy the question's wording | 9 | 2 |
 | Bioconductor install death | 3 | — |
 
-Three of the four routes are attempts to make sense of the question's
-impossible significance definition; the fourth (the 58s) is ruled plain agent
-error (see row 11). Replicate 9 is the most telling: it understood the data
-correctly and *invented a pathway fold-change metric* because the question
-demanded one that standard ORA cannot supply.
+Two of the four routes are attempts to make sense of the question's
+impossible significance definition; the 58s and replicate 9 are ruled agent
+error (see row 11). Replicate 9 is still the most telling notebook: it
+understood the data correctly and *invented a pathway fold-change metric*
+because the question demanded one that standard ORA cannot supply — but
+inventing a metric, rather than flagging the impossibility, is the agent's
+own choice (decision 2026-08-28).
 
 ## What the author notebooks add
 
@@ -206,3 +208,10 @@ judgment:
   reclassified as plain agent error with no wording excuse — the DESeq2
   column signature is diagnostic, and 6/10 replicates read it correctly.
   Rows 4, 11 and categories 5–6 reflect both rulings.
+- **Third ruling, 2026-08-28:** bix-26-q5 replicate 9 (the hand-rolled ORA
+  with a constructed pathway-level "fold change", answer 2) is reclassified
+  from wording-driven to **agent error**: the question's demand for an
+  impossible metric does not license fabricating one; the correct move is to
+  say so. The GSEA replicate (rep 5, answer 12) stays wording-driven — it
+  reached for an existing standard metric rather than inventing one. Agent
+  share of incorrect runs becomes 7 of 80.

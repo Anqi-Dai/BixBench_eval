@@ -19,8 +19,8 @@ by re-deriving both the key and the agent's answer from the raw data, and 9
 of the 10 runs that never answered died following the harness's own
 package-install instruction. The agent's own share is 8 runs out of 140. None
 of the fixes require new data — clearer wording, verified keys, a three-state
-score — and the audit that found them transfers to any benchmark that
-replicates its runs.
+score — and the audit itself is reusable: the same checks would work on any
+benchmark built like this one.
 
 ## Why this benchmark, why this question
 

@@ -99,8 +99,9 @@ pages.append(p)
 # standalone line the lean in-figure subtitles no longer carry.
 TAKEAWAYS = [
     ("fig1_grader_flips.png",
-     "Two current-generation graders agree on all 130 answers. The shipped "
-     "previous-generation grader contradicts itself on 14.6% of them."),
+     "Two newer graders from different model families agree on all 130 "
+     "answers. The benchmark's older shipped grader contradicts itself on "
+     "14.6% of them."),
     ("fig2_three_states.png",
      "10 of 140 runs never answered - and 9 of those died following the "
      "harness's own package-install instruction."),

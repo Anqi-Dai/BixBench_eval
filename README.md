@@ -34,7 +34,7 @@ figure:
 
 **[Explore the interactive version of this figure →](https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html)** — hover any of the 140 runs for its verified cause and classification.
 
-<a href="https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html"><img src="results/figures/fig4_failure_causes.png" alt="Most incorrect answers trace to the benchmark — click for the interactive version" width="720"></a>
+<a href="https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html"><img src="results/figures/fig4_interactive_preview.png" alt="The 140-run audit — click for the interactive version" width="720"></a>
 
 ## Where to read
 

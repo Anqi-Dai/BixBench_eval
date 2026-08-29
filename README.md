@@ -32,7 +32,9 @@ figure:
    — hidden analysis choices in the key, genes-versus-transcripts conflation,
    and keys that contradict their own questions' thresholds.
 
-<img src="results/figures/fig4_failure_causes.png" alt="Most incorrect answers trace to the benchmark" width="720">
+**[Explore the interactive version of this figure →](https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html)** — hover any of the 140 runs for its verified cause and classification.
+
+<a href="https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html"><img src="results/figures/fig4_failure_causes.png" alt="Most incorrect answers trace to the benchmark — click for the interactive version" width="720"></a>
 
 ## Where to read
 

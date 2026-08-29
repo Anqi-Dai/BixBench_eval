@@ -1,4 +1,4 @@
-# What BixBench's discarded variance says — a reliability study
+# What the score hides: an audit of BixBench
 
 ## The finding
 
@@ -107,7 +107,7 @@ Not a surprising result, but a consequential one: every number downstream
 depends on which grader reads the answers. I use gpt-5 for the rest of this
 writeup.
 
-![Figure 1 — grader disagreement follows model generation, not model family](results/figures/fig1_grader_flips.png)
+<img src="results/figures/fig1_grader_flips.png" alt="Figure 1 — grader disagreement follows model generation, not model family" width="540">
 
 ## No answer is its own outcome, not a wrong answer
 
@@ -126,7 +126,7 @@ the time (9 of 46), while the 93 runs that never attempted one all answered.
 Folding all ten into "incorrect" inflates the agent's error rate with failures
 that trace to the benchmark's own instructions.
 
-![Figure 2 — no answer is its own outcome, not a wrong answer](results/figures/fig2_three_states.png)
+<img src="results/figures/fig2_three_states.png" alt="Figure 2 — no answer is its own outcome, not a wrong answer" width="540">
 
 ## Correctness is a property of the question
 
@@ -145,7 +145,7 @@ Given an answer, correctness is a property of the question, not luck. So the
 real question is what it is about these questions — which is where the error
 taxonomy comes in.
 
-![Figure 3 — given an answer, correctness is a property of the question](results/figures/fig3_question_rates.png)
+<img src="results/figures/fig3_question_rates.png" alt="Figure 3 — given an answer, correctness is a property of the question" width="540">
 
 ## Where the failures actually come from
 
@@ -192,7 +192,7 @@ all levels"), and one bix-26-q5 run took a defensible alternative route
 None of this requires new data to fix; it is question wording and key
 derivation, the cheapest parts of a benchmark to improve.
 
-![Figure 4 — most incorrect answers trace to the benchmark](results/figures/fig4_failure_causes.png)
+<img src="results/figures/fig4_failure_causes.png" alt="Figure 4 — most incorrect answers trace to the benchmark" width="540">
 
 ## Limitations and what I'd do next
 
@@ -206,8 +206,8 @@ before trusting it, score no-answer as its own outcome and trace its cause,
 re-derive the key before it referees anything — and run this whole check end
 to end, down to reading the agent's trajectories, before a benchmark ships.
 
-One agent model ran everything, and my Claude grader is the same model that
-produced the answers — mirroring the benchmark's own agentic setup, where
+Another limitation is the model roster: one agent model ran everything, and
+my Claude grader is the same model that produced the answers — mirroring the benchmark's own agentic setup, where
 each model grades itself. If that breeds leniency toward its own answers,
 this design can't detect it. The clean test is straightforward: run gpt-5 as
 the agent too, have both families grade both answer sets, and model the
@@ -215,7 +215,8 @@ grader-by-answerer interaction. Likewise, everything ran at temperature 1.0
 because that is what the benchmark ships; how the instability behaves at
 other temperatures is untested and worth knowing.
 
-The graders here had an easy job — every answer is a number. On questions
+A further limit sits in the grading itself: the graders here had an easy job
+— every answer is a number. On questions
 with free-text or multi-part answers, an LLM verdict deserves less trust, and
 spot-checking by human graders would be worth the cost. And the deepest
 lesson cuts at the ground truth itself: an answer key derived from one

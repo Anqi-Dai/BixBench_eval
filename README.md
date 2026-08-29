@@ -32,7 +32,7 @@ figure:
    — hidden analysis choices in the key, genes-versus-transcripts conflation,
    and keys that contradict their own questions' thresholds.
 
-<img src="results/figures/fig4_failure_causes.png" alt="Most incorrect answers trace to the benchmark" width="540">
+<img src="results/figures/fig4_failure_causes.png" alt="Most incorrect answers trace to the benchmark" width="720">
 
 ## Where to read
 

@@ -21,7 +21,7 @@ capsules, excluded from the table below — see the scope note).
 
 Data: `results/agent_runs.csv` (159 trajectories: 140 campaign + 19 pilot),
 agent notebooks embedded in the trajectory JSONs (~216 MB, not tracked in
-this repo; deposited with the Zenodo archive), author notebooks inside the `CapsuleFolder-*.zip` files on
+this repo; deposited at [doi:10.5281/zenodo.22151974](https://doi.org/10.5281/zenodo.22151974)), author notebooks inside the `CapsuleFolder-*.zip` files on
 `huggingface.co/datasets/futurehouse/BixBench`.
 
 ## Scope: K=10 campaign capsules only

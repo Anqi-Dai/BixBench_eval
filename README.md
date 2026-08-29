@@ -1,6 +1,6 @@
 # What the score hides: an audit of BixBench
 
-<!-- Zenodo DOI badge goes here after minting -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22151932.svg)](https://doi.org/10.5281/zenodo.22151932)
 
 BixBench is FutureHouse's benchmark for bioinformatics agents. It does
 something right that most benchmarks skip — it runs every analysis ten times —
@@ -42,6 +42,7 @@ figure:
 | [Interactive run audit](results/figures/fig4_interactive.html) | All 140 runs; hover any run for its verified cause |
 | [env/REVIEW_REPORT.md](env/REVIEW_REPORT.md) | Case-by-case failure attribution, verified by recomputation |
 | [env/SETUP.md](env/SETUP.md) · [env/DESIGN.md](env/DESIGN.md) · [env/PAPER_NOTES.md](env/PAPER_NOTES.md) · [env/CAPSULE_SELECTION.md](env/CAPSULE_SELECTION.md) | Environment and friction log · grader design · what the paper says, verified · capsule choice |
+| [Agent trajectories on Zenodo](https://doi.org/10.5281/zenodo.22151974) | All 159 runs with full notebooks (~216 MB), deposited as a dataset |
 
 ## Choosing the capsules
 

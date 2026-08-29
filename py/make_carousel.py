@@ -92,7 +92,6 @@ for stat, label in [("140", "agent runs, 10 per question"),
     d.text((M, y), stat, font=F_STRIP_B, fill=CRITICAL)
     d.text((M + 320, y), label, font=F_STRIP, fill=INK2)
     y += 105
-d.text((M, PAGE - 230), "swipe →", font=F_SUB, fill=MUTED)
 pages.append(p)
 
 # ---- pages 2-5: the figures, each with a takeaway strip --------------------
@@ -147,6 +146,14 @@ for label, url in [
     d.text((M, y + 78), url, font=F_BODY, fill=CRITICAL)
     y += 230
 pages.append(p)
+
+# page counter on every page: direction-neutral, true in a swiped LinkedIn
+# viewer and a scrolled PDF reader alike
+for i, pg in enumerate(pages, 1):
+    pd = ImageDraw.Draw(pg)
+    label = f"{i} / {len(pages)}"
+    pd.text((PAGE - 170 - pd.textlength(label, font=F_SUB), PAGE - 150),
+            label, font=F_SUB, fill=MUTED)
 
 pages[0].save("results/figures/linkedin_carousel.pdf", save_all=True,
               append_images=pages[1:], resolution=300)

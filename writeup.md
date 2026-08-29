@@ -23,8 +23,7 @@ benchmark built like this one.
 
 Agents are already doing bioinformatics. You can hand one a count matrix and a
 question and get a full differential-expression analysis back in minutes — this
-is happening now, and it is speeding the field up in a way nothing before it
-did. Whether we can trust that work comes down to evaluation. And benchmarks
+is happening now, and it is speeding the field up. Whether we can trust that work comes down to evaluation. And benchmarks
 for biology agents are young: a small number exist, all from the last two years
 — [LAB-Bench](https://arxiv.org/abs/2407.10362) and its February 2026 successor
 [LABBench2](https://arxiv.org/abs/2604.09554) for research tasks,
@@ -33,8 +32,8 @@ across four disciplines — and the methods for checking the benchmarks
 themselves — is the grader consistent, is the answer key right, is one accuracy
 number enough — are younger still.
 
-[BixBench](https://arxiv.org/abs/2503.00096), FutureHouse's benchmark for
-bioinformatics agents, does something right that most benchmarks skip: it runs
+[BixBench](https://arxiv.org/abs/2503.00096) does something right that most
+benchmarks skip: it runs
 every analysis ten times, because agents don't give the same answer twice. But
 those ten runs get folded into a single accuracy fraction, and the spread — how
 often the agent disagrees with itself — is never reported. I've spent seven
@@ -49,9 +48,9 @@ variance say?
 A BixBench capsule is a folder of real data from one published study, plus a
 few open-ended questions an analyst should be able to answer from that data. I
 picked three capsules — enough to see variation between capsules while keeping
-the budget under control — through a deliberate selection process: survey all
-54, pilot seven, keep three (the full workflow, with reasons for every
-rejection, is [in the repo](env/CAPSULE_SELECTION.md)). The three come from
+the budget under control: survey all 54, pilot seven, keep three (the full
+workflow, with every rejection explained, is
+[in the repo](env/CAPSULE_SELECTION.md)). The three come from
 three different source papers, so they are independent of each other. Together
 they carry 14 questions, and every answer is a number — a count, a ratio, a
 p-value.
@@ -76,9 +75,9 @@ to keep the OpenAI side comparable, with a GPT model from around the same time
 default the code actually ships
 ([GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o)). The exact
 pinned versions are in the diagram below. Each grader scored every answer 10 times — so grader
-noise is measured rather than assumed — and the majority of those 10 verdicts
-decides: an answer counts as correct under a grader only when most of its 10
-calls say so. That way one flaky grading call can't flip a result.
+noise is measured rather than assumed — and an answer counts as correct under
+a grader only when most of its 10 calls say so, so one flaky grading call
+can't flip a result.
 
 ```mermaid
 flowchart LR
@@ -113,9 +112,9 @@ writeup.
 
 A run can end three ways: a correct answer, a wrong answer, or no answer at
 all. BixBench only scores correct/incorrect, so the no-answer runs — 10 of my
-140, the gray bars in Figure 2 — get counted as wrong answers. That default
-deserves a closer look, because a no-answer run is not necessarily the agent's
-mistake — you can't tell whose problem it is from the score alone. So I read
+140, the gray bars in Figure 2 — get counted as wrong answers. But a
+no-answer run is not necessarily the agent's mistake — you can't tell whose
+problem it is from the score alone. So I read
 all ten trajectories. Only one was the agent's own doing: it ran out of its
 40-step budget. The other nine died the same way — the harness's own prompt
 tells the agent to install R packages through BiocManager, but the execution
@@ -218,11 +217,7 @@ other temperatures is untested and worth knowing.
 A further limit sits in the grading itself: the graders here had an easy job
 — every answer is a number. On questions
 with free-text or multi-part answers, an LLM verdict deserves less trust, and
-spot-checking by human graders would be worth the cost. And the deepest
-lesson cuts at the ground truth itself: an answer key derived from one
-author's notebook needs the same verification the agent gets — re-derived
-from the raw data, ideally with an independent model in the loop — before it
-referees anything.
+spot-checking by human graders would be worth the cost.
 
 If I extended the benchmark itself, I'd start with the field it doesn't
 cover:

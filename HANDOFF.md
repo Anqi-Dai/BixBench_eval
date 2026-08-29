@@ -91,12 +91,11 @@ load compiled models against RcppParallel 6 on this machine.
 ## Documents, in reading order
 
 1. `README.md` — finding-first, with the capsule-selection diagram
-2. `bixbench_project_brief.md` — goals and scope, with checkboxes (35 done, 11 open)
-3. `env/REVIEW_REPORT.md` — **the failure taxonomy, verified by recomputation**
-4. `env/SETUP.md` — environment, friction log, harness defects
-5. `env/DESIGN.md` — grader design and the analysis plan for this dataset
-6. `env/PAPER_NOTES.md` — what the paper actually says, verified
-7. `env/CAPSULE_SELECTION.md` — why these three capsules
+2. `env/REVIEW_REPORT.md` — **the failure taxonomy, verified by recomputation**
+3. `env/SETUP.md` — environment, friction log, harness defects
+4. `env/DESIGN.md` — grader design and the analysis plan for this dataset
+5. `env/PAPER_NOTES.md` — what the paper actually says, verified
+6. `env/CAPSULE_SELECTION.md` — why these three capsules
 
 ---
 

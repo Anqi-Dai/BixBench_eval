@@ -39,7 +39,7 @@ figure:
 | Document | What it holds |
 |---|---|
 | [writeup.md](writeup.md) | The study, finding-first (~1,700 words, 4 figures) |
-| [Interactive run audit](results/figures/fig4_interactive.html) | All 140 runs; hover any run for its verified cause |
+| [Interactive run audit](https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html) | All 140 runs; hover any run for its verified cause |
 | [env/REVIEW_REPORT.md](env/REVIEW_REPORT.md) | Case-by-case failure attribution, verified by recomputation |
 | [env/SETUP.md](env/SETUP.md) · [env/DESIGN.md](env/DESIGN.md) · [env/PAPER_NOTES.md](env/PAPER_NOTES.md) · [env/CAPSULE_SELECTION.md](env/CAPSULE_SELECTION.md) | Environment and friction log · grader design · what the paper says, verified · capsule choice |
 | [Agent trajectories on Zenodo](https://doi.org/10.5281/zenodo.22151974) | All 159 runs with full notebooks (~216 MB), deposited as a dataset |

@@ -152,7 +152,7 @@ To find out, I re-derived every incorrect answer — the answer key and the
 agent's number both — from the raw capsule data, inside the benchmark's own
 Docker image. The full case-by-case table is in the repo
 ([REVIEW_REPORT.md](env/REVIEW_REPORT.md)); Figure 4 shows the totals, and an
-[interactive companion](results/figures/fig4_interactive.html) lets you hover
+[interactive companion](https://anqi-dai.github.io/BixBench_eval/results/figures/fig4_interactive.html) lets you hover
 any of the 140 runs for its verified cause and classification.
 
 A few incorrect answers are the agent's own. In four bix-26-q5 runs the agent

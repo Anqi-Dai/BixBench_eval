@@ -197,8 +197,9 @@ describe those capsules, not BixBench as a whole. The specific failure causes
 are concentrated too: the gene-versus-transcript cases all come from one
 capsule. What travels beyond these three capsules is the audit itself, not
 the numbers: replicate the runs and keep the spread, measure the grader
-before trusting it, score no-answer as its own outcome, and re-derive the key
-before it referees anything.
+before trusting it, score no-answer as its own outcome and trace its cause,
+re-derive the key before it referees anything — and run this whole check end
+to end, down to reading the agent's trajectories, before a benchmark ships.
 
 One agent model ran everything, and my Claude grader is the same model that
 produced the answers — mirroring the benchmark's own agentic setup, where
@@ -217,9 +218,8 @@ author's notebook needs the same verification the agent gets — re-derived
 from the raw data, ideally with an independent model in the loop — before it
 referees anything.
 
-One cheap upstream fix falls straight out of this study: score no-answer as
-its own state instead of folding it into incorrect. If I
-extended the benchmark itself, I'd start with the field it doesn't cover:
+If I extended the benchmark itself, I'd start with the field it doesn't
+cover:
 BixBench has no microbiome or metagenomics capsules at all — confirmed three
 independent ways — and that is the corner of biology I know best.
 

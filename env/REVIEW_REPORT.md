@@ -1,4 +1,8 @@
-# Phase 4 review report — failure review, verified by recomputation
+# Failure review, verified by recomputation
+
+This is the case-by-case supplement behind [writeup.md](../writeup.md)'s
+Figure 4 and the interactive run audit: every campaign answer that missed the
+key by more than 1%, with its measured cause.
 
 Three passes are merged here. The first read the agent notebooks against the
 capsule ground truth and assigned provisional diagnoses. The second
@@ -15,10 +19,9 @@ Verification scripts, each with its `docker run` line in the header:
 (campaign capsules); `R/verify_bix1_key.R`, `R/verify_bix43_key.R` (pilot
 capsules, excluded from the table below — see the scope note).
 
-Data: `results/agent_runs.csv` (159 trajectories), agent notebooks embedded in
-the trajectory JSONs under
-`../BixBench-upstream/data/trajectories/pricing_bix8/pricing_bix8_claude45/`,
-author notebooks inside the `CapsuleFolder-*.zip` files on
+Data: `results/agent_runs.csv` (159 trajectories: 140 campaign + 19 pilot),
+agent notebooks embedded in the trajectory JSONs (~216 MB, not tracked in
+this repo; deposited with the Zenodo archive), author notebooks inside the `CapsuleFolder-*.zip` files on
 `huggingface.co/datasets/futurehouse/BixBench`.
 
 ## Scope: K=10 campaign capsules only
@@ -37,7 +40,7 @@ tried, and bix-4's key is underdetermined by the shipped data (DVMC needs
 trees the capsule doesn't contain and the questions don't specify how to
 build). The pilot verification scripts are kept for reference.
 
-**Confidence scale.** *Documented* = the cause is read directly from the
+**Confidence scale.** GT = ground truth (the answer key). *Documented* = the cause is read directly from the
 capsule author's own notebook code or cell output, and recomputation matches.
 *Verified* = key and agent numbers both reproduced digit-for-digit, cause
 therefore measured. Every row in the table sits at one of these two levels;
@@ -143,10 +146,12 @@ available to the agent — or to the graders.
    across them. Each is fixable with one phrase in the question ("use all
    levels"; "padj-significant"; a pathway-significance definition ORA can
    actually satisfy).
-6. **Genuine agent error / instability** (row 12; the four 58-answer
-   replicates of row 11): wrong pipeline or unstable intermediate step. The
-   58s are ruled unexcused (2026-08-24) — the files' DESeq2 column signature
-   is unmistakably gene-level, and 6 of 10 replicates read it correctly.
+6. **Genuine agent error / instability** (row 12; row 11's four 58-answer
+   replicates and its invented-metric replicate 9): wrong pipeline, unstable
+   intermediate step, or a fabricated metric. The 58s are ruled unexcused
+   (2026-08-24) — the files' DESeq2 column signature is unmistakably
+   gene-level, and 6 of 10 replicates read it correctly; replicate 9 is
+   ruled agent error (2026-08-28) — see the rulings log below.
 7. **Self-inflicted environment failure** (the nine non-responses): the
    harness's own `R_SPECIFIC_GUIDELINES` install idiom meets an image without
    `BiocManager`. See `env/SETUP.md`.
@@ -182,10 +187,10 @@ Questions at 90–100% graded-correct — `bix-8-q1/q2/q3`, `bix-26-q3`,
 K=1 pilot deviations (bix-1, bix-43, bix-4) are excluded per the scope note
 at the top.
 
-## What remains for manual review
+## Judgment calls and rulings
 
-The computational and provenance questions are settled; what is left is
-judgment:
+The computational and provenance questions are settled; these are the
+judgment calls and how each was ruled:
 
 - ~~Decide the framing of the sex covariate~~ — **resolved 2026-08-24** by
   domain review: the sex-adjusted model is the right analysis for this design;
@@ -196,7 +201,7 @@ judgment:
   defensible analysts produce two different exact answers and only one is
   scored correct. Writeup framing: the key is not wrong, the question is
   incomplete.
-- **Pull quotes for the writeup.** The strongest exhibits are now verbatim:
+- **Strongest verbatim exhibits.**
   the author's `p-value < 2.2e-16` output cell next to the agent's
   8.100776e-194; the `design = ~sex+condition` line next to five questions
   that never mention sex; the agent's "Wait — pathways don't have fold

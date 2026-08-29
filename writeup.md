@@ -1,8 +1,5 @@
 # What BixBench's discarded variance says — a reliability study
 
-*Draft. Target 1,200–1,800 words. Sections follow the plan in HANDOFF.md;
-references live in `references.bib`, every entry verified against arXiv.*
-
 ## The finding
 
 I ran BixBench — FutureHouse's benchmark for bioinformatics agents — under
@@ -110,6 +107,8 @@ Not a surprising result, but a consequential one: every number downstream
 depends on which grader reads the answers. I use gpt-5 for the rest of this
 writeup.
 
+![Figure 1 — grader disagreement follows model generation, not model family](results/figures/fig1_grader_flips.png)
+
 ## No answer is its own outcome, not a wrong answer
 
 A run can end three ways: a correct answer, a wrong answer, or no answer at
@@ -127,6 +126,8 @@ the time (9 of 46), while the 93 runs that never attempted one all answered.
 Folding all ten into "incorrect" inflates the agent's error rate with failures
 that trace to the benchmark's own instructions.
 
+![Figure 2 — no answer is its own outcome, not a wrong answer](results/figures/fig2_three_states.png)
+
 ## Correctness is a property of the question
 
 For the answered runs, I fit a Bayesian multilevel model,
@@ -143,6 +144,8 @@ run; 4 of the 6 bix-8 questions were graded correct on essentially every run.
 Given an answer, correctness is a property of the question, not luck. So the
 real question is what it is about these questions — which is where the error
 taxonomy comes in.
+
+![Figure 3 — given an answer, correctness is a property of the question](results/figures/fig3_question_rates.png)
 
 ## Where the failures actually come from
 
@@ -188,6 +191,8 @@ all levels"), and one bix-26-q5 run took a defensible alternative route
 (GSEA) around the impossible pathway-significance definition described above.
 None of this requires new data to fix; it is question wording and key
 derivation, the cheapest parts of a benchmark to improve.
+
+![Figure 4 — most incorrect answers trace to the benchmark](results/figures/fig4_failure_causes.png)
 
 ## Limitations and what I'd do next
 

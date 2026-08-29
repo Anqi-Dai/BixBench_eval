@@ -1,0 +1,11 @@
+{
+  "title": "What the score hides: an audit of BixBench — code and study",
+  "description": "Code and writeup for a reliability audit of BixBench, FutureHouse's bioinformatics-agent benchmark: 140 replicated agent runs, 3,900 replicated grading verdicts across three graders, and every answer key re-derived from the raw capsule data. Headline finding: most of what the benchmark scores as agent failure traces to the answer key or the question's wording rather than the agent — verified by re-deriving both the key and the agent's answer from the raw capsule data. Full agent trajectories are deposited in a companion Zenodo dataset record.",
+  "creators": [{"name": "Dai, Anqi", "orcid": "0000-0003-3106-4624"}],
+  "license": "MIT",
+  "keywords": ["benchmark evaluation", "LLM agents", "bioinformatics", "BixBench", "grader reliability", "reproducibility", "answer-key verification"],
+  "related_identifiers": [
+    {"identifier": "arXiv:2503.00096", "relation": "cites", "scheme": "arxiv"},
+    {"identifier": "https://huggingface.co/datasets/futurehouse/BixBench", "relation": "isDerivedFrom", "scheme": "url"}
+  ]
+}

@@ -1,59 +1,51 @@
-# BixBench Reliability Study
+# What the score hides: an audit of BixBench
 
-**Status: replicate campaign running.** Two of three capsules complete. Findings
-below are preliminary and will be restated with credible intervals once the
-`brms` analysis runs.
+<!-- Zenodo DOI badge goes here after minting -->
 
-## The question
+BixBench is FutureHouse's benchmark for bioinformatics agents. It does
+something right that most benchmarks skip — it runs every analysis ten times —
+but those runs are pooled into a single accuracy number, and everything the
+pooling flattens goes unexamined. This study audits what that score hides, on
+three capsules (14 questions, 140 agent runs, ~$80): the run-to-run variation,
+the grader's reliability, and the answer keys themselves. The headline:
+**most of what the benchmark scores as agent failure does not come from the
+agent.** 73 of 80 incorrect answers trace to the answer key or the question's
+wording — verified by re-deriving both the key and the agent's answer from the
+raw data — and 9 of the 10 runs that never answered died following the
+harness's own package-install instruction. The agent's own share is 8 runs out
+of 140.
 
-BixBench reports how often LLM agents get bioinformatics analyses right. It does
-not report whether those numbers are **stable**, or what the failures actually
-are **biologically**.
+**The full writeup is [writeup.md](writeup.md).** Four findings, one per
+figure:
 
-One correction to the premise, from reading the paper rather than assuming: the
-authors *do* replicate, ten times per question, "to account for stochastic
-trajectories". They then pool those runs into a single accuracy fraction and
-report no standard deviation, no interval, and no measure of how often the agent
-answers the same question differently. **The variance was generated and
-discarded.** That is what this study recovers.
+1. **[Grader disagreement follows model generation, not model family](writeup.md#the-grader-is-part-of-the-instrument)**
+   — two current-generation graders from different families agree on all 130
+   answers; the shipped previous-generation grader contradicts itself on 14.6%
+   of them.
+2. **[No answer is its own outcome, not a wrong answer](writeup.md#no-answer-is-its-own-outcome-not-a-wrong-answer)**
+   — 10 runs never answered; 9 died in the harness's own install instruction,
+   1 ran out of steps.
+3. **[Correctness is a property of the question, not luck](writeup.md#correctness-is-a-property-of-the-question)**
+   — per-question success rates are bimodal: near-certain success or
+   near-certain failure, almost nothing between.
+4. **[Most incorrect answers trace to the benchmark](writeup.md#where-the-failures-actually-come-from)**
+   — hidden analysis choices in the key, genes-versus-transcripts conflation,
+   and keys that contradict their own questions' thresholds.
 
-## Findings so far
+<img src="results/figures/fig4_failure_causes.png" alt="Most incorrect answers trace to the benchmark" width="540">
 
-**Roughly 1 in 4 replicate pairs disagree, and the two capsules measured are
-unstable in different ways.** Agreement between ten runs of the same question, at
-temperature 1.0 — the setting every shipped BixBench config uses:
+## Where to read
 
-| Capsule | exact | within 1% | within 5% |
-|---|---:|---:|---:|
-| `bix-8` | 76.3% | 90.0% | **90.0%** |
-| `bix-49` | 69.6% | 92.3% | **100%** |
-
-`bix-49`'s disagreements are numerical drift that vanishes at 5% tolerance.
-`bix-8`'s survive it — 321 versus 901 on one question, 70 versus 106 on another,
-where 106 is correct. **Self-consistency is therefore not one number**: a single
-agreement rate would hide that one capsule produces *different answers* while the
-other produces *the same answer computed slightly differently*.
-
-Because every ground truth in these capsules is numeric, agreement is computed by
-parsing numbers directly from the answers, with **no LLM grader in the loop**.
-
-**71.4% of what BixBench scores as an incorrect answer is the model declining to
-answer.** Across both shipped zero-shot baselines, 284 of 398 answers marked wrong
-were graded `refused` by the grader itself. `_parse_grade_response` maps every
-verdict other than `correct` to incorrect, leaving `GradeType.REFUSED` unused.
-(Zero-shot baselines have no data access, where refusing is appropriate — so this
-sizes the mechanism, not the paper's agentic figure.)
-
-**Four harness defects, all found by running it.** Refusals scored as wrong
-answers; `evaluation_mode` naming two verifiers as if deterministic while ~100% of
-open answers reach an LLM; a declared Python floor of 3.12 on which the agentic
-path cannot run; and overlapping batches that re-run questions and let a repeat
-resume from the previous attempt's notebook. Details in
-[`env/SETUP.md`](env/SETUP.md).
+| Document | What it holds |
+|---|---|
+| [writeup.md](writeup.md) | The study, finding-first (~1,700 words, 4 figures) |
+| [Interactive run audit](results/figures/fig4_interactive.html) | All 140 runs; hover any run for its verified cause |
+| [env/REVIEW_REPORT.md](env/REVIEW_REPORT.md) | Case-by-case failure attribution, verified by recomputation |
+| [env/SETUP.md](env/SETUP.md) · [env/DESIGN.md](env/DESIGN.md) · [env/PAPER_NOTES.md](env/PAPER_NOTES.md) · [env/CAPSULE_SELECTION.md](env/CAPSULE_SELECTION.md) | Environment and friction log · grader design · what the paper says, verified · capsule choice |
 
 ## Choosing the capsules
 
-Three capsules out of 54, and most of the project's effort. The diagram's argument
+Three capsules out of 54. The diagram's argument
 is **which filters were free and which had to be paid for**.
 
 ```mermaid
@@ -116,10 +108,12 @@ cross-model comparison, temperature dependence, or the benchmark as a whole.
 
 | Path | What lives here |
 |---|---|
-| `env/` | Setup and friction log, design notes, capsule selection, paper notes |
-| `py/` | Capsule survey, replicate-run pipeline, grading and consistency analysis |
-| `R/` | `brms` multilevel analysis |
-| `results/` | Tidy CSVs — the durable artifacts, including the spend ledger |
+| [writeup.md](writeup.md) | The study writeup |
+| `env/` | Setup and friction log, design notes, capsule selection, paper notes, the review report |
+| `py/` | Capsule survey, replicate-run pipeline, grading, verification scripts |
+| `R/` | Two-stage `brms` model, figures, key-verification scripts |
+| `results/` | Tidy CSVs, the spend ledger, model summary, and the four figures |
+| [references.bib](references.bib) | Verified references for the writeup |
 | `scripts/` | Campaign runner and run watcher |
 | `notebooks/` | Curated agent notebooks quoted in the failure taxonomy |
 | `data/` | Capsule data (gitignored; pulled from Hugging Face) |
